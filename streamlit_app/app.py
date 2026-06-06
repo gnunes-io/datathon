@@ -72,9 +72,15 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'modelo_risc
 
 @st.cache_resource
 def load_model():
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
-    return None
+    if not os.path.exists(MODEL_PATH):
+        return None
+    payload = joblib.load(MODEL_PATH)
+    # Patch de compatibilidade entre versões do scikit-learn:
+    # _fill_dtype pode não estar presente em objetos salvos com outra versão
+    for _, step in payload['pipeline'].steps:
+        if hasattr(step, 'statistics_') and not hasattr(step, '_fill_dtype'):
+            step._fill_dtype = step.statistics_.dtype
+    return payload
 
 model_payload = load_model()
 
