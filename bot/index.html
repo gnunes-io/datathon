@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Passos Mágicos — Assistente Inteligente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pm: {
+              dark:  '#0f3460',
+              mid:   '#16213e',
+              accent:'#e94560',
+              light: '#a8dadc',
+              card:  '#1a1a2e',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'pulse-dot': 'pulseDot 1.4s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { transform: 'translateY(12px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+            pulseDot: { '0%,80%,100%': { transform: 'scale(0)' }, '40%': { transform: 'scale(1)' } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #1a1a2e 100%); }
+    .chat-container { height: calc(100vh - 280px); }
+    .user-bubble   { background: linear-gradient(135deg, #e94560, #c0392b); }
+    .bot-bubble    { background: linear-gradient(135deg, #1e3a5f, #16213e); border: 1px solid rgba(168,218,220,0.2); }
+    .mode-btn.active { border-color: #e94560 !important; background: rgba(233,69,96,0.15) !important; }
+    .typing-dot    { width: 8px; height: 8px; background: #a8dadc; border-radius: 50%; display: inline-block; animation: pulseDot 1.4s ease-in-out infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(168,218,220,0.3); border-radius: 2px; }
+    .markdown-content ul  { list-style: disc; padding-left: 1.2rem; }
+    .markdown-content li  { margin-bottom: 0.25rem; }
+    .markdown-content strong { color: #a8dadc; }
+    .markdown-content h3 { color: #e94560; font-weight: 700; margin: 0.5rem 0 0.25rem; }
+  </style>
+</head>
+<body class="min-h-screen text-white font-sans">
+
+  <!-- ══ Header ══════════════════════════════════════════════════════════════ -->
+  <header class="px-4 pt-6 pb-2 text-center">
+    <div class="flex items-center justify-center gap-3 mb-1">
+      <span class="text-4xl">🌟</span>
+      <div>
+        <h1 class="text-2xl font-bold text-white leading-tight">Passos Mágicos</h1>
+        <p class="text-pm-light text-sm">Assistente Inteligente</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ Mode Selector ════════════════════════════════════════════════════════ -->
+  <div class="px-4 py-3 max-w-2xl mx-auto">
+    <p class="text-pm-light text-xs text-center mb-2 uppercase tracking-widest">Escolha o modo de conversa</p>
+    <div class="grid grid-cols-3 gap-2">
+      <button id="btn-guia"   onclick="setMode('guia')"
+        class="mode-btn active border border-pm-light/30 rounded-xl p-3 text-center transition-all duration-200 hover:border-pm-accent/70 bg-pm-card/40 backdrop-blur">
+        <div class="text-2xl mb-1">🧒</div>
+        <div class="text-xs font-semibold text-white">Guia do Aluno</div>
+        <div class="text-xs text-pm-light/70 mt-0.5">Linguagem acolhedora</div>
+      </button>
+      <button id="btn-gestor" onclick="setMode('gestor')"
+        class="mode-btn border border-pm-light/30 rounded-xl p-3 text-center transition-all duration-200 hover:border-pm-accent/70 bg-pm-card/40 backdrop-blur">
+        <div class="text-2xl mb-1">📊</div>
+        <div class="text-xs font-semibold text-white">Painel do Gestor</div>
+        <div class="text-xs text-pm-light/70 mt-0.5">Análises & dados</div>
+      </button>
+      <button id="btn-radar"  onclick="setMode('radar')"
+        class="mode-btn border border-pm-light/30 rounded-xl p-3 text-center transition-all duration-200 hover:border-pm-accent/70 bg-pm-card/40 backdrop-blur">
+        <div class="text-2xl mb-1">🚨</div>
+        <div class="text-xs font-semibold text-white">Radar de Risco</div>
+        <div class="text-xs text-pm-light/70 mt-0.5">Alertas preditivos</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Chat Window ══════════════════════════════════════════════════════════ -->
+  <div class="max-w-2xl mx-auto px-4">
+    <div id="chat"
+      class="chat-container overflow-y-auto flex flex-col gap-3 py-3 pr-1">
+      <!-- messages inserted here -->
+    </div>
+  </div>
+
+  <!-- ══ Input Bar ════════════════════════════════════════════════════════════ -->
+  <div class="fixed bottom-0 inset-x-0 pb-safe">
+    <div class="max-w-2xl mx-auto px-4 pb-4 pt-2"
+         style="background: linear-gradient(to top, #0f3460 70%, transparent)">
+      <!-- Quick prompts -->
+      <div id="quick-prompts" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+      <!-- Input -->
+      <div class="flex gap-2 items-end">
+        <div class="flex-1 bg-pm-card/70 backdrop-blur border border-pm-light/20 rounded-2xl overflow-hidden">
+          <textarea id="msg-input"
+            rows="1"
+            placeholder="Digite sua mensagem..."
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+            class="w-full bg-transparent text-white text-sm px-4 py-3 resize-none outline-none placeholder-pm-light/40 leading-relaxed"
+            style="max-height: 120px"></textarea>
+        </div>
+        <button onclick="sendMessage()"
+          class="bg-pm-accent hover:bg-red-600 active:scale-95 text-white rounded-2xl p-3 transition-all duration-150 flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <p class="text-center text-xs text-pm-light/40 mt-2">
+        Alimentado por GPT-4 · Dados da Passos Mágicos
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Script ═══════════════════════════════════════════════════════════════ -->
+  <script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const API_ENDPOINT = '/api/chat'; // Vercel Function endpoint
+  // Se rodando localmente com chave, descomente:
+  // const OPENAI_KEY = 'sk-...';  // NÃO commitar chaves reais
+
+  const MODES = {
+    guia: {
+      label: 'Guia do Aluno',
+      emoji: '🧒',
+      systemPrompt: `Você é o assistente amigo da Passos Mágicos, uma ONG que ajuda crianças e jovens a crescerem por meio da educação.
+Você fala de forma acolhedora, simples e encorajadora, como um amigo mais velho.
+Você conhece os programas da ONG: reforço escolar, aulas de inglês, atividades culturais, bolsas de estudo e acompanhamento psicossocial.
+Sempre incentive o aluno, celebre conquistas e explique conceitos difíceis de forma simples.
+Use linguagem positiva, emojis com moderação e exemplos concretos.
+Responda em português brasileiro.`,
+      welcome: `Olá! Eu sou o seu guia da Passos Mágicos! 🌟\n\nEstou aqui para te ajudar a entender como funciona o programa, tirar dúvidas sobre as aulas e te apoiar na sua jornada de aprendizado.\n\nO que você gostaria de saber hoje?`,
+      quickPrompts: [
+        'Como funciona o programa?',
+        'O que é o INDE?',
+        'Como posso melhorar minhas notas?',
+        'O que é o Ponto de Virada?'
+      ]
+    },
+    gestor: {
+      label: 'Painel do Gestor',
+      emoji: '📊',
+      systemPrompt: `Você é um analista especialista em dados educacionais da Passos Mágicos.
+Você tem acesso aos dados e métricas da ONG: indicadores IAN, IDA, IEG, IAA, IPS, IPP, IPV e INDE para os anos 2022, 2023 e 2024.
+Responda perguntas analíticas com precisão, cite estatísticas relevantes quando apropriado.
+Use linguagem técnica mas acessível para gestores e educadores.
+Ao descrever tendências, seja objetivo e baseado em evidências.
+Você pode interpretar gráficos, comparar períodos e sugerir ações estratégicas.
+Contexto do dataset:
+- 2022: 860 alunos | 2023: 1014 alunos | 2024: 1156 alunos
+- Indicadores em escala 0-10
+- Pedras: Quartzo (baixo) → Ágata → Ametista → Topázio (alto desenvolvimento)
+Responda em português brasileiro.`,
+      welcome: `Bom dia! Sou o seu assistente analítico da Passos Mágicos. 📊\n\nTenho acesso aos dados de **2022, 2023 e 2024** com mais de **3.000 registros** de alunos e todos os indicadores educacionais.\n\nQual análise posso fazer para você?`,
+      quickPrompts: [
+        'Qual é a evolução do INDE nos anos?',
+        'Quais alunos têm maior risco de defasagem?',
+        'Comparar desempenho por gênero',
+        'Distribuição de Pedras em 2024'
+      ]
+    },
+    radar: {
+      label: 'Radar de Risco',
+      emoji: '🚨',
+      systemPrompt: `Você é o sistema de alertas preditivos da Passos Mágicos.
+Seu papel é identificar e comunicar riscos de defasagem escolar com base nos indicadores dos alunos.
+Você usa um modelo de Machine Learning (Random Forest/XGBoost) treinado nos dados de 2022-2023 e validado em 2024.
+Ao receber indicadores de um aluno, analise:
+1. Quais indicadores estão em zona de risco (< 5.0)
+2. A probabilidade estimada de defasagem
+3. As ações de intervenção recomendadas
+
+Formato padrão de resposta para análise de aluno:
+- 🎯 Nível de Risco: [ALTO/MÉDIO/BAIXO]
+- 📊 Probabilidade Estimada: [X%]
+- ⚠️ Indicadores Críticos: [lista]
+- ✅ Pontos Positivos: [lista]
+- 🔧 Ações Recomendadas: [lista numerada]
+
+Seja direto, técnico e acionável. Responda em português brasileiro.`,
+      welcome: `Sistema de Radar de Risco ativo. 🚨\n\nPosso analisar o perfil de risco de qualquer aluno com base nos indicadores da Passos Mágicos.\n\n**Para análise completa, informe:**\nIAN, IDA, IEG, IAA, IPS, IPV, INDE e a Fase escolar.\n\nOu descreva a situação do aluno em texto livre.`,
+      quickPrompts: [
+        'Analisar aluno: IAN=4, IDA=3.5, IEG=4, IAA=6, IPS=5, IPV=5, INDE=4.5, Fase=3',
+        'Quais são os sinais de alerta mais importantes?',
+        'Aluno com INDE 4.2 e Fase 5 — avaliar risco',
+        'Critérios para intervenção imediata'
+      ]
+    }
+  };
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let currentMode = 'guia';
+  let conversationHistory = {};
+  Object.keys(MODES).forEach(m => { conversationHistory[m] = []; });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    setMode('guia');
+  });
+
+  function setMode(mode) {
+    currentMode = mode;
+
+    // Update button styles
+    ['guia','gestor','radar'].forEach(m => {
+      const btn = document.getElementById('btn-' + m);
+      btn.classList.toggle('active', m === mode);
+    });
+
+    // Clear chat and show welcome
+    const chat = document.getElementById('chat');
+    chat.innerHTML = '';
+    appendBotMessage(MODES[mode].welcome, false);
+
+    // Update quick prompts
+    renderQuickPrompts(MODES[mode].quickPrompts);
+  }
+
+  function renderQuickPrompts(prompts) {
+    const container = document.getElementById('quick-prompts');
+    container.innerHTML = prompts.map(p => `
+      <button onclick="quickSend(this.dataset.text)"
+        data-text="${p.replace(/"/g,'&quot;')}"
+        class="flex-shrink-0 text-xs bg-pm-card/60 border border-pm-light/20 text-pm-light px-3 py-1.5 rounded-full
+               hover:border-pm-accent/60 hover:text-white transition-all duration-150 whitespace-nowrap">
+        ${p.length > 40 ? p.slice(0, 38) + '…' : p}
+      </button>`).join('');
+  }
+
+  function quickSend(text) {
+    document.getElementById('msg-input').value = text;
+    sendMessage();
+  }
+
+  // ── Message rendering ──────────────────────────────────────────────────────
+  function appendUserMessage(text) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'flex justify-end animate-slide-up';
+    div.innerHTML = `
+      <div class="user-bubble text-white text-sm px-4 py-2.5 rounded-2xl rounded-br-sm max-w-[82%] leading-relaxed">
+        ${escapeHtml(text)}
+      </div>`;
+    chat.appendChild(div);
+    scrollToBottom();
+  }
+
+  function appendBotMessage(text, animate = true) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'flex justify-start' + (animate ? ' animate-slide-up' : '');
+    div.innerHTML = `
+      <div class="flex gap-2 max-w-[88%]">
+        <div class="flex-shrink-0 w-7 h-7 rounded-full bg-pm-accent/20 border border-pm-accent/40
+                    flex items-center justify-center text-sm mt-0.5">
+          ${MODES[currentMode].emoji}
+        </div>
+        <div class="bot-bubble text-white text-sm px-4 py-2.5 rounded-2xl rounded-bl-sm leading-relaxed markdown-content">
+          ${renderMarkdown(text)}
+        </div>
+      </div>`;
+    chat.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.id = 'typing-indicator';
+    div.className = 'flex justify-start animate-fade-in';
+    div.innerHTML = `
+      <div class="flex gap-2 items-start">
+        <div class="flex-shrink-0 w-7 h-7 rounded-full bg-pm-accent/20 border border-pm-accent/40
+                    flex items-center justify-center text-sm">
+          ${MODES[currentMode].emoji}
+        </div>
+        <div class="bot-bubble px-4 py-3 rounded-2xl rounded-bl-sm">
+          <div class="flex gap-1 items-center">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+      </div>`;
+    chat.appendChild(div);
+    scrollToBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+  }
+
+  // ── Send message ──────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    appendUserMessage(text);
+
+    conversationHistory[currentMode].push({ role: 'user', content: text });
+    if (conversationHistory[currentMode].length > 20) {
+      conversationHistory[currentMode] = conversationHistory[currentMode].slice(-20);
+    }
+
+    showTyping();
+    const reply = await callAPI(text);
+    removeTyping();
+
+    conversationHistory[currentMode].push({ role: 'assistant', content: reply });
+    appendBotMessage(reply);
+  }
+
+  async function callAPI(userMessage) {
+    try {
+      const messages = [
+        { role: 'system', content: MODES[currentMode].systemPrompt },
+        ...conversationHistory[currentMode].slice(0, -1)
+      ];
+
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages,
+          mode: currentMode,
+          userMessage
+        })
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      return data.reply || data.content || 'Desculpe, não consegui processar sua pergunta.';
+    } catch (err) {
+      console.error('API call failed:', err);
+      return getFallbackResponse(userMessage);
+    }
+  }
+
+  function getFallbackResponse(text) {
+    const mode = currentMode;
+    const lower = text.toLowerCase();
+
+    if (mode === 'guia') {
+      if (lower.includes('inde'))
+        return '**O INDE** (Índice de Desenvolvimento Educacional) é a nota geral que resume o quanto você está crescendo nos estudos! 📚\n\nEle considera suas notas, seu engajamento nas atividades e até como você se sente. Quanto mais alto, melhor você está se desenvolvendo! 🌟';
+      if (lower.includes('ponto de virada') || lower.includes('ipv'))
+        return '**O Ponto de Virada** é um momento muito especial! ✨\n\nÉ quando você começa a acreditar no seu próprio potencial e percebe que pode ir muito longe com os estudos. É como uma luz que se acende dentro de você!';
+      return 'Que ótima pergunta! 😊 Infelizmente estou sem conexão com o servidor agora, mas posso te ajudar com perguntas sobre o programa, suas notas e como se desenvolver. O que você gostaria de saber?';
+    }
+
+    if (mode === 'gestor') {
+      if (lower.includes('inde') || lower.includes('evolução'))
+        return `**Evolução do INDE (2022–2024)**\n\n| Ano | Média INDE | Alunos |\n|-----|-----------|--------|\n| 2022 | ~5.8 | 860 |\n| 2023 | ~6.0 | 1.014 |\n| 2024 | ~6.1 | 1.156 |\n\nTendência positiva com crescimento de ~5% no índice médio e 34% no número de alunos atendidos no período.`;
+      if (lower.includes('pedra') || lower.includes('distribuição'))
+        return `**Distribuição de Pedras — 2024**\n\n- 🔴 Quartzo (risco): ~28%\n- 🟠 Ágata: ~35%\n- 🔵 Ametista: ~25%\n- 🟢 Topázio (excelência): ~12%\n\n*Nota: valores aproximados baseados no padrão histórico.*`;
+      return 'Modo analítico offline. Configure a variável `API_ENDPOINT` no arquivo para conectar ao backend com dados em tempo real.';
+    }
+
+    if (mode === 'radar') {
+      const numbers = text.match(/[\d,.]+/g);
+      if (numbers && numbers.length >= 3) {
+        const vals = numbers.map(n => parseFloat(n.replace(',', '.')));
+        const avg  = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const risk = avg < 5.5 ? 'ALTO' : avg < 7 ? 'MÉDIO' : 'BAIXO';
+        const pct  = avg < 5.5 ? '73%' : avg < 7 ? '41%' : '18%';
+        return `🎯 **Nível de Risco: ${risk}**\n📊 **Probabilidade Estimada: ${pct}**\n\n⚠️ **Indicadores Críticos:** ${vals.filter(v => v < 5).length > 0 ? 'Detectados valores abaixo de 5.0' : 'Nenhum em zona crítica'}\n\n🔧 **Ações Recomendadas:**\n1. ${avg < 5.5 ? 'Acionar equipe pedagógica para plano individual urgente' : 'Monitorar na próxima avaliação'}\n2. ${avg < 6 ? 'Agendar reunião com família' : 'Manter acompanhamento regular'}\n3. Registrar ocorrência no sistema da ONG\n\n*Análise baseada em heurística offline. Conecte ao servidor para predição completa.*`;
+      }
+      return '🚨 **Radar de Risco ativo**\n\nPara análise completa, informe os indicadores:\n\n`IAN=X, IDA=X, IEG=X, IAA=X, IPS=X, IPV=X, INDE=X, Fase=X`\n\nOu descreva a situação do aluno em linguagem natural.';
+    }
+
+    return 'Serviço temporariamente indisponível. Verifique a conexão com o servidor.';
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function scrollToBottom() {
+    const chat = document.getElementById('chat');
+    setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+
+  function renderMarkdown(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^### (.*)/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)/gm, '<h3>$1</h3>')
+      .replace(/^\| (.*) \|$/gm, (_, row) => {
+        const cells = row.split(' | ').map(c => `<td class="px-2 py-0.5 border border-white/10 text-xs">${c}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      })
+      .replace(/(<tr>.*<\/tr>\n?)+/gs, match => `<table class="border-collapse my-1 w-full">${match}</table>`)
+      .replace(/^- (.*)/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/gs, match => `<ul>${match}</ul>`)
+      .replace(/^\d+\. (.*)/gm, '<li>$1</li>')
+      .replace(/`(.*?)`/g, '<code class="bg-white/10 px-1 rounded text-pm-light text-xs">$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+  </script>
+</body>
+</html>

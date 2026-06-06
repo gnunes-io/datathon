@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Model artifacts — add to git if small (<100MB), otherwise use Git LFS
+# model/modelo_risco_defasagem.pkl
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Vercel
+.vercel/
+node_modules/
+bot/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
