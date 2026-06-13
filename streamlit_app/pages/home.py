@@ -64,13 +64,14 @@ else:
     st.warning("Modelo não carregado — execute `model/modelo_preditivo.ipynb` para gerar o `.pkl`.")
 
 st.info(
-    "**O que o modelo realmente prevê:** Defasagem formal significa o aluno estar cursando "
-    "uma fase **menor do que a esperada para sua idade** — não é sinônimo de baixo desempenho. "
-    "Nos dados da ONG, os alunos com defasagem tendem a estar em fases mais avançadas (ex: Fase 9) "
-    "com boa adequação de nível (IAN alto) — ou seja, são estudantes mais velhos que o esperado "
-    "para aquela fase, não necessariamente com indicadores mais baixos. "
-    "Por isso, reduzir apenas os indicadores acadêmicos pode não elevar o risco — o modelo "
-    "considera principalmente a relação entre a **Fase** e os indicadores de adequação de nível.",
+    "**Como interpretar o risco:** O modelo prediz defasagem formal — aluno cursando uma fase "
+    "abaixo da esperada para sua idade. O principal sinal de risco é **IAN alto em fases avançadas**: "
+    "um aluno com IAN=10 (completamente adequado ao nível) pode estar em uma fase fácil demais "
+    "porque está lá há mais anos do que o esperado. Por isso, "
+    "indicadores acadêmicos baixos (IDA, IEG) não elevam necessariamente o risco de defasagem — "
+    "eles indicam *dificuldade na fase atual*, não deslocamento de série. "
+    "O risco sobe quando IAN=10 combinado com Fase elevada sugere um aluno mais velho que o esperado "
+    "para aquela fase.",
     icon="ℹ️"
 )
 
