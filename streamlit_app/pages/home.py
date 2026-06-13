@@ -52,12 +52,12 @@ if payload:
     thr  = payload.get('threshold', 0)
     has_shap = payload.get('shap_explainer') is not None
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Alunos analisados (treino + val)",
-              f"~{1_874:,}".replace(",", "."), "2022–2023")
+    m1.metric("Alunos no treino",
+              f"~{3_030:,}".replace(",", "."), "2022–2023–2024")
     m2.metric("Capacidade discriminativa", f"{auc:.0%}",
-              "AUC-ROC no teste 2024")
+              "AUC-ROC (validação cruzada OOF)")
     m3.metric("Threshold de risco", f"{thr:.0%}",
-              "calibrado no val 2023 (sem leakage)")
+              "calibrado por Fbeta β=2 (sem leakage)")
     m4.metric("Explicabilidade SHAP", "✅ Ativa" if has_shap else "⚠️ Gere o pkl",
               "fatores por aluno")
 else:

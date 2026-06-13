@@ -120,9 +120,19 @@ def predict(payload, feats_dict):
         try:
             X_imp = pipeline.named_steps['imputer'].transform(df_in)
             sv    = explainer.shap_values(X_imp)
-            if isinstance(sv, list):
-                sv = sv[1]   # Random Forest: lista [classe0, classe1]
-            shap_vals = pd.Series(sv[0], index=feature_cols)
+            # Normalise to 1-D array of shape (n_features,) for class 1
+            sv = np.array(sv[1] if isinstance(sv, list) else sv)
+            if sv.ndim == 3:        # (samples, features, classes)
+                sv = sv[0, :, 1]
+            elif sv.ndim == 2:
+                if sv.shape[0] == 1:    # (1, features)
+                    sv = sv[0]
+                elif sv.shape[1] == 2:  # (features, classes) — single sample
+                    sv = sv[:, 1]
+                else:
+                    sv = sv[0]
+            if len(sv) == len(feature_cols):
+                shap_vals = pd.Series(sv, index=feature_cols)
         except Exception:
             pass
 
@@ -130,10 +140,13 @@ def predict(payload, feats_dict):
 
 
 def risk_level(prob, threshold):
-    """Retorna (nível_str, emoji, cor_hex)."""
-    if prob >= threshold + 0.15:
+    """Retorna (nível_str, emoji, cor_hex).
+
+    Zonas: alto ≥ threshold · médio ≥ 0.40 · baixo < 0.40
+    """
+    if prob >= threshold:
         return 'alto',  '🔴', RISK_HIGH
-    elif prob >= threshold:
+    elif prob >= 0.40:
         return 'medio', '🟠', RISK_MED
     else:
         return 'baixo', '🟢', RISK_LOW

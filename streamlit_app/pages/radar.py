@@ -1,4 +1,4 @@
-"""Página Radar de Risco — avaliação individual com SHAP e comparação de perfis."""
+"""Página Radar de Risco — avaliação individual com SHAP."""
 import os
 import sys
 import numpy as np
@@ -17,11 +17,8 @@ if payload is None:
     st.error("⚠️ Modelo não encontrado. Execute `model/modelo_preditivo.ipynb`.")
     st.stop()
 
-pipeline     = payload['pipeline']
-feature_cols = payload['feature_cols']
-threshold    = payload['threshold']
-model_name   = payload.get('model_name', 'Modelo')
-ref_means    = payload.get('ref_means', {
+threshold  = payload['threshold']
+ref_means  = payload.get('ref_means', {
     'IAN': 7.5, 'IDA': 6.5, 'IEG': 6.8,
     'IAA': 7.2, 'IPS': 7.0, 'IPV': 6.3, 'INDE': 6.8,
 })
@@ -29,7 +26,19 @@ has_shap = payload.get('shap_explainer') is not None
 
 RADAR_LABELS = ['IAN', 'IDA', 'IEG', 'IAA', 'IPS', 'IPV', 'INDE']
 
-# ── Estado da sessão ───────────────────────────────────────────────────────────
+_PEDRA_MAP = {
+    'Quartzo':  ('🪨', '#6B7280', 'INDE < 5,5'),
+    'Ágata':    ('💎', '#3B82F6', '5,5 ≤ INDE < 7,0'),
+    'Ametista': ('💜', '#8B5CF6', '7,0 ≤ INDE < 8,5'),
+    'Topázio':  ('⭐', '#F59E0B', 'INDE ≥ 8,5'),
+}
+
+def inde_to_pedra(inde: float) -> str:
+    if inde >= 8.5: return 'Topázio'
+    if inde >= 7.0: return 'Ametista'
+    if inde >= 5.5: return 'Ágata'
+    return 'Quartzo'
+
 if 'historico' not in st.session_state:
     st.session_state.historico = []
 
@@ -42,29 +51,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# FORMULÁRIO + RESULTADO — layout 2 colunas
+# FORMULÁRIO + RESULTADO
 # ══════════════════════════════════════════════════════════════════════════════
 form_col, result_col = st.columns([1.1, 0.9], gap="large")
 
-# ── Coluna ESQUERDA — formulário ───────────────────────────────────────────────
 with form_col:
+    # Identificação — só Fase
     st.markdown('<p class="section-hdr">Identificação</p>', unsafe_allow_html=True)
-    id_col1, id_col2, id_col3 = st.columns(3)
-    nome_aluno = id_col1.text_input("Nome / ID", placeholder="ex: Ana S.", key="nome")
-    fase = id_col2.selectbox("Fase escolar", list(range(1, 9)), index=2, key="fase")
-    genero = id_col3.radio("Gênero", ["Feminino", "Masculino", "Não informado"],
-                           index=0, horizontal=True, key="genero")
+    fase = st.selectbox("Fase escolar", list(range(1, 9)), index=2, key="fase")
 
-    pedra_col1, pedra_col2 = st.columns([1, 2])
-    pedra = pedra_col1.selectbox(
-        "Pedra classificatória", ["Quartzo", "Ágata", "Ametista", "Topázio"],
-        index=1, key="pedra"
-    )
-    pedra_col2.caption(
-        "🪨 Quartzo < 5,5 · 💎 Ágata 5,5–7,0 · 💜 Ametista 7,0–8,5 · ⭐ Topázio ≥ 8,5"
-    )
-
-    # ── Indicadores Acadêmicos ─────────────────────────────────────────────────
+    # Indicadores Acadêmicos
     st.markdown('<p class="section-hdr">Indicadores Acadêmicos</p>', unsafe_allow_html=True)
 
     def num_input(label, key, ref_key, help_text):
@@ -88,7 +84,18 @@ with form_col:
         inde = num_input("INDE — Índice Geral", "inde", "INDE",
                          "Índice global de desenvolvimento educacional")
 
-    # ── Indicadores Psicossociais ──────────────────────────────────────────────
+    # Pedra auto-calculada a partir do INDE
+    pedra = inde_to_pedra(inde)
+    emoji_p, cor_p, faixa_p = _PEDRA_MAP[pedra]
+    st.markdown(
+        f'<div style="background:rgba(0,0,0,0.04); border-left:3px solid {cor_p}; '
+        f'border-radius:6px; padding:0.45rem 0.75rem; margin-bottom:0.75rem; font-size:0.85rem;">'
+        f'Pedra: <strong>{emoji_p} {pedra}</strong> '
+        f'<span style="opacity:0.55; font-size:0.78rem;">({faixa_p})</span></div>',
+        unsafe_allow_html=True
+    )
+
+    # Indicadores Psicossociais
     st.markdown('<p class="section-hdr">Indicadores Psicossociais</p>', unsafe_allow_html=True)
 
     ps1, ps2 = st.columns(2)
@@ -101,7 +108,6 @@ with form_col:
         ips = num_input("IPS — Psicossocial", "ips", "IPS",
                         "Aspectos emocionais e relacionamentos sociais")
 
-        # IPP — com checkbox de disponibilidade
         ipp_ok = st.checkbox("IPP disponível para este aluno?", value=True, key="ipp_ok",
                              help="IPP só existe a partir de 2023. Desmarque se não houver avaliação.")
         if ipp_ok:
@@ -113,9 +119,10 @@ with form_col:
             ipp = np.nan
             st.caption("IPP será imputado pela mediana histórica do treino.")
 
-# ── Coluna DIREITA — resultado em tempo real ───────────────────────────────────
+# ── Coluna DIREITA — resultado ─────────────────────────────────────────────────
 with result_col:
-    feats = build_features(ian, ida, ieg, iaa, ips, ipp, ipv, inde, fase, genero, pedra)
+    feats = build_features(ian, ida, ieg, iaa, ips, ipp, ipv, inde, fase,
+                           'Não informado', pedra)
     prob, shap_vals = predict(payload, feats)
     nivel, emoji, cor = risk_level(prob, threshold)
 
@@ -125,7 +132,6 @@ with result_col:
         'baixo': 'BAIXO RISCO',
     }
 
-    # Card de risco
     st.markdown(f"""
     <div class="risk-card" style="background:{cor};">
         <div class="pct">{prob:.0%}</div>
@@ -134,21 +140,20 @@ with result_col:
     </div>
     """, unsafe_allow_html=True)
 
-    # Barra de progresso + contexto de prevalência
-    prev_2024 = 0.119
     st.progress(min(prob, 1.0))
     if nivel == 'baixo':
-        st.success(f"Probabilidade abaixo do limiar de risco ({threshold:.0%}).", icon="✅")
+        st.success(f"Probabilidade abaixo da zona de atenção (40%).", icon="✅")
     elif nivel == 'medio':
-        st.warning("Zona de atenção. Acompanhamento reforçado recomendado.", icon="⚠️")
+        st.warning("Zona de atenção (40–61%). Acompanhamento reforçado recomendado.", icon="⚠️")
     else:
-        st.error("Intervenção prioritária recomendada.", icon="🚨")
+        st.error("Acima do limiar de risco. Intervenção prioritária recomendada.", icon="🚨")
 
+    prev_2024 = 0.119
     st.caption(
         f"Contexto: em 2024, {prev_2024:.0%} dos alunos foram classificados em risco de defasagem."
     )
 
-    # Deltas vs média histórica — tabela compacta, dark-mode compatível
+    # Tabela Indicadores vs média histórica
     st.markdown('<p class="section-hdr">Indicadores vs média histórica</p>',
                 unsafe_allow_html=True)
 
@@ -161,28 +166,26 @@ with result_col:
         delta  = val - ref
         sinal  = f"+{delta:.1f}" if delta >= 0 else f"{delta:.1f}"
         arrow  = "▲" if delta >= 0 else "▼"
-        cor    = "#059669" if delta >= 0 else "#DC2626"
-        border = "#059669" if delta >= 0 else "#DC2626"
-        # barra visual 0–10
+        d_cor  = "#059669" if delta >= 0 else "#DC2626"
         pct_val = int(val * 10)
         pct_ref = int(ref * 10)
         rows_html += f"""
         <tr style="border-bottom:1px solid rgba(128,128,128,0.12);">
           <td style="padding:0.28rem 0.5rem; font-weight:600; white-space:nowrap;
-                     border-left:3px solid {border}; padding-left:0.6rem;">{sigla}</td>
+                     border-left:3px solid {d_cor}; padding-left:0.6rem;">{sigla}</td>
           <td style="padding:0.28rem 0.5rem; text-align:center; font-variant-numeric:tabular-nums;">
             {val:.1f}
           </td>
           <td style="padding:0.28rem 0.5rem; width:55%;">
             <div style="background:rgba(128,128,128,0.12); border-radius:4px; height:6px; position:relative;">
-              <div style="position:absolute; background:{cor}; border-radius:4px; height:6px;
+              <div style="position:absolute; background:{d_cor}; border-radius:4px; height:6px;
                           width:{pct_val}%; max-width:100%;"></div>
               <div style="position:absolute; left:{pct_ref}%; top:-2px; width:2px; height:10px;
                           background:rgba(128,128,128,0.5);"></div>
             </div>
           </td>
           <td style="padding:0.28rem 0.5rem; text-align:right; font-size:0.78rem;
-                     color:{cor}; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                     color:{d_cor}; white-space:nowrap; font-variant-numeric:tabular-nums;">
             {arrow} {sinal}
           </td>
         </tr>"""
@@ -194,36 +197,34 @@ with result_col:
           <th style="text-align:left; padding:0.2rem 0.5rem 0.2rem 0.6rem;">Ind.</th>
           <th style="text-align:center; padding:0.2rem 0.5rem;">Valor</th>
           <th style="padding:0.2rem 0.5rem;"></th>
-          <th style="text-align:right; padding:0.2rem 0.5rem;">Δ</th>
+          <th style="text-align:right; padding:0.2rem 0.5rem;">Δ ref</th>
         </tr>
       </thead>
       <tbody>{rows_html}</tbody>
     </table>
-    <p style="font-size:0.72rem; opacity:0.45; margin-top:0.35rem;">
-      Barra cinza: escala 0–10 · traço = média histórica · cor = diferença vs ref
-    </p>
     """, unsafe_allow_html=True)
 
-    # Botão para salvar no histórico da sessão
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("💾 Salvar nesta sessão", use_container_width=True):
-        nome_display = nome_aluno.strip() if nome_aluno.strip() else f"Aluno {len(st.session_state.historico)+1}"
+        label = f"Aluno {len(st.session_state.historico)+1}"
         st.session_state.historico.append({
-            'Nome': nome_display, 'Risco (%)': f"{prob:.1%}",
+            'ID': label, 'Risco (%)': f"{prob:.1%}",
             'Nível': nivel_labels[nivel], 'IAN': ian, 'IDA': ida,
-            'IEG': ieg, 'INDE': inde, 'Fase': fase,
+            'IEG': ieg, 'INDE': inde, 'Fase': fase, 'Pedra': pedra,
         })
-        st.success(f"'{nome_display}' salvo no histórico.")
+        st.success(f"'{label}' salvo no histórico.")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GRÁFICOS — radar + SHAP (largura total)
+# GRÁFICOS — radar + SHAP
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("---")
 viz_radar, viz_shap = st.columns([1, 1], gap="large")
 
-# ── Radar chart Plotly ─────────────────────────────────────────────────────────
+_DARK = '#0F172A'
+_GRID = 'rgba(255,255,255,0.08)'
+
 with viz_radar:
-    st.markdown('<p class="section-hdr">Perfil do aluno (radar)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-hdr">Perfil do aluno</p>', unsafe_allow_html=True)
 
     v_aluno = [feats[k] for k in RADAR_LABELS]
     v_ref   = [ref_means.get(k, 6.5) for k in RADAR_LABELS]
@@ -232,33 +233,44 @@ with viz_radar:
     fig_radar = go.Figure()
     fig_radar.add_trace(go.Scatterpolar(
         r=v_aluno + [v_aluno[0]], theta=theta, fill='toself',
-        fillcolor='rgba(0,51,153,0.15)',
-        line=dict(color=PM_BLUE, width=2.5),
+        fillcolor='rgba(99,179,237,0.20)',
+        line=dict(color='#63B3ED', width=2.5),
         name='Aluno', hovertemplate='%{theta}: %{r:.1f}<extra></extra>'
     ))
     fig_radar.add_trace(go.Scatterpolar(
         r=v_ref + [v_ref[0]], theta=theta, fill='toself',
-        fillcolor='rgba(100,100,100,0.05)',
-        line=dict(color='#94A3B8', width=1.5, dash='dot'),
+        fillcolor='rgba(255,255,255,0.03)',
+        line=dict(color='rgba(255,255,255,0.30)', width=1.5, dash='dot'),
         name='Média histórica', hovertemplate='%{theta}: %{r:.1f}<extra></extra>'
     ))
     fig_radar.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 10],
-                            tickfont=dict(size=9), gridcolor='#E2E8F0'),
-            angularaxis=dict(tickfont=dict(size=11, color=PM_BLUE)),
-            bgcolor='white',
+            bgcolor=_DARK,
+            radialaxis=dict(
+                visible=True, range=[0, 10],
+                tickvals=[2, 4, 6, 8, 10],
+                tickfont=dict(size=8, color='rgba(255,255,255,0.35)'),
+                gridcolor=_GRID,
+                linecolor=_GRID,
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=11, color='white'),
+                gridcolor=_GRID,
+                linecolor=_GRID,
+            ),
         ),
         showlegend=True,
-        legend=dict(orientation='h', yanchor='bottom', y=-0.18,
-                    font=dict(size=11)),
-        margin=dict(l=50, r=50, t=30, b=50),
-        height=380,
-        paper_bgcolor='#F8FAFC',
+        legend=dict(
+            orientation='h', yanchor='bottom', y=-0.20,
+            font=dict(size=11, color='white'),
+            bgcolor='rgba(0,0,0,0)',
+        ),
+        margin=dict(l=55, r=55, t=30, b=65),
+        height=400,
+        paper_bgcolor=_DARK,
     )
     st.plotly_chart(fig_radar, use_container_width=True)
 
-# ── SHAP chart ─────────────────────────────────────────────────────────────────
 with viz_shap:
     st.markdown('<p class="section-hdr">Fatores que influenciaram esta predição</p>',
                 unsafe_allow_html=True)
@@ -269,7 +281,7 @@ with viz_shap:
                .abs()
                .nlargest(10)
                .index)
-        sv_top  = shap_vals.rename(FEATURE_NAMES_PT)[top].sort_values()
+        sv_top     = shap_vals.rename(FEATURE_NAMES_PT)[top].sort_values()
         bar_colors = [RISK_HIGH if v > 0 else RISK_LOW for v in sv_top.values]
 
         fig_shap = go.Figure(go.Bar(
@@ -279,20 +291,23 @@ with viz_shap:
             marker_color=bar_colors,
             hovertemplate='%{y}: %{x:+.3f}<extra></extra>',
         ))
-        fig_shap.add_vline(x=0, line_color='#64748B', line_width=1)
+        fig_shap.add_vline(x=0, line_color='rgba(255,255,255,0.25)', line_width=1)
         fig_shap.update_layout(
             xaxis_title='Impacto na probabilidade de risco (SHAP)',
-            yaxis=dict(tickfont=dict(size=10)),
-            margin=dict(l=10, r=10, t=10, b=40),
-            height=380,
-            paper_bgcolor='#F8FAFC',
-            plot_bgcolor='white',
+            xaxis=dict(
+                tickfont=dict(color='rgba(255,255,255,0.5)', size=9),
+                title_font=dict(color='rgba(255,255,255,0.5)', size=10),
+                gridcolor=_GRID,
+                zerolinecolor='rgba(255,255,255,0.25)',
+            ),
+            yaxis=dict(tickfont=dict(size=10, color='white'), gridcolor=_GRID),
+            margin=dict(l=10, r=15, t=10, b=50),
+            height=400,
+            paper_bgcolor=_DARK,
+            plot_bgcolor=_DARK,
         )
         st.plotly_chart(fig_shap, use_container_width=True)
-        st.caption(
-            "🔴 vermelho = aumenta o risco · 🟢 verde = reduz o risco. "
-            "Tamanho da barra = magnitude do impacto para este aluno específico."
-        )
+        st.caption("🔴 aumenta o risco · 🟢 reduz o risco · tamanho = magnitude para este aluno")
     else:
         if not has_shap:
             st.info(
@@ -326,9 +341,8 @@ with rec_col:
         st.success("Nenhum indicador individual em zona crítica.")
     else:
         for titulo, desc in alertas:
-            with st.container():
-                st.markdown(f"**🔸 {titulo}**")
-                st.caption(desc)
+            st.markdown(f"**🔸 {titulo}**")
+            st.caption(desc)
 
 with pos_col:
     st.markdown("**✅ Pontos positivos**")
@@ -376,71 +390,3 @@ if st.session_state.historico:
         if st.button("🗑️ Limpar histórico"):
             st.session_state.historico = []
             st.rerun()
-
-# ══════════════════════════════════════════════════════════════════════════════
-# COMPARAÇÃO DE PERFIS
-# ══════════════════════════════════════════════════════════════════════════════
-with st.expander("📊 Comparar múltiplos alunos"):
-    st.caption("Compare até 3 alunos lado a lado. Gênero não é coletado aqui — use 'Não informado'.")
-    n_alunos = st.radio("Número de alunos", [2, 3], horizontal=True, key="n_comp")
-
-    comp_data = []
-    comp_cols = st.columns(n_alunos, gap="medium")
-    for i, col in enumerate(comp_cols):
-        with col:
-            st.markdown(f"**Aluno {i+1}**")
-            d = {
-                'nome':  st.text_input("Nome/ID", value=f"Aluno {i+1}", key=f"cn_{i}"),
-                'ian':   st.number_input("IAN",  0.0, 10.0, 6.0, 0.5, key=f"cian_{i}"),
-                'ida':   st.number_input("IDA",  0.0, 10.0, 6.0, 0.5, key=f"cida_{i}"),
-                'ieg':   st.number_input("IEG",  0.0, 10.0, 6.0, 0.5, key=f"cieg_{i}"),
-                'iaa':   st.number_input("IAA",  0.0, 10.0, 7.0, 0.5, key=f"ciaa_{i}"),
-                'ips':   st.number_input("IPS",  0.0, 10.0, 6.5, 0.5, key=f"cips_{i}"),
-                'ipv':   st.number_input("IPV",  0.0, 10.0, 6.0, 0.5, key=f"cipv_{i}"),
-                'inde':  st.number_input("INDE", 0.0, 10.0, 6.5, 0.5, key=f"cinde_{i}"),
-                'ipp_ok': st.checkbox("IPP disp.", value=False, key=f"cipp_ok_{i}"),
-                'fase':  st.selectbox("Fase", list(range(1, 9)), index=2, key=f"cfase_{i}"),
-                'pedra': st.selectbox("Pedra", ["Quartzo", "Ágata", "Ametista", "Topázio"],
-                                      index=1, key=f"cpedra_{i}"),
-            }
-            d['ipp'] = st.number_input("IPP", 0.0, 10.0, 6.5, 0.5,
-                                       key=f"cipp_{i}") if d['ipp_ok'] else np.nan
-            comp_data.append(d)
-
-    if st.button("Comparar", type="primary", key="btn_comp"):
-        resultados = []
-        for a in comp_data:
-            f = build_features(a['ian'], a['ida'], a['ieg'], a['iaa'], a['ips'],
-                               a['ipp'], a['ipv'], a['inde'], a['fase'],
-                               'Não informado', a['pedra'])
-            p, _ = predict(payload, f)
-            n, e, c = risk_level(p, threshold)
-            resultados.append({'Nome': a['nome'], 'Risco (%)': p * 100,
-                                'Nível': f"{e} {n.title()}",
-                                'IAN': a['ian'], 'IDA': a['ida'],
-                                'IEG': a['ieg'], 'INDE': a['inde']})
-
-        df_comp = pd.DataFrame(resultados)
-        st.dataframe(df_comp.set_index('Nome').style.format({'Risco (%)': '{:.1f}%'}),
-                     use_container_width=True)
-
-        cores = [
-            RISK_HIGH if r >= (threshold + 0.15) * 100
-            else (RISK_MED if r >= threshold * 100 else RISK_LOW)
-            for r in df_comp['Risco (%)']
-        ]
-        fig_comp = go.Figure(go.Bar(
-            x=df_comp['Nome'], y=df_comp['Risco (%)'],
-            marker_color=cores,
-            text=[f"{v:.1f}%" for v in df_comp['Risco (%)']],
-            textposition='outside',
-        ))
-        fig_comp.add_hline(y=threshold * 100, line_dash='dash', line_color='#64748B',
-                           annotation_text=f"Limiar {threshold:.0%}")
-        fig_comp.update_layout(
-            yaxis=dict(range=[0, 100], title='Probabilidade de risco (%)'),
-            xaxis_title='Aluno',
-            height=350, paper_bgcolor='#F8FAFC', plot_bgcolor='white',
-            margin=dict(t=30, b=30),
-        )
-        st.plotly_chart(fig_comp, use_container_width=True)
