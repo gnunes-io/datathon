@@ -9,7 +9,9 @@ from plotly.subplots import make_subplots
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import DATA_PATH, PM_BLUE, PM_GOLD, RISK_HIGH, RISK_LOW
+from utils import DATA_PATH, PM_BLUE, PM_GOLD, RISK_HIGH, RISK_LOW, GLOBAL_CSS
+
+st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 # ── Carregamento e cache dos dados ─────────────────────────────────────────────
 INDICATOR_COLS = ['IAN', 'IDA', 'IEG', 'IAA', 'IPS', 'IPP', 'IPV', 'INDE']

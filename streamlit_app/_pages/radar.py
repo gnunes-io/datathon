@@ -10,7 +10,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import (
     load_model, build_features, predict, risk_level,
     FEATURE_NAMES_PT, PM_BLUE, PM_GOLD, RISK_HIGH, RISK_MED, RISK_LOW,
+    GLOBAL_CSS,
 )
+
+st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 payload = load_model()
 if payload is None:

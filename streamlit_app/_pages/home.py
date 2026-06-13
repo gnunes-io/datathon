@@ -4,8 +4,9 @@ import sys
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import LOGO_PATH, INDICATORS, PEDRAS_INFO, PM_BLUE, PM_GOLD, load_model
+from utils import LOGO_PATH, INDICATORS, PEDRAS_INFO, PM_BLUE, PM_GOLD, load_model, GLOBAL_CSS
 
+st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 payload = load_model()
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
