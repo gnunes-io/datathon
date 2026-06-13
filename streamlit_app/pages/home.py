@@ -64,11 +64,13 @@ else:
     st.warning("Modelo não carregado — execute `model/modelo_preditivo.ipynb` para gerar o `.pkl`.")
 
 st.info(
-    "**Como interpretar o acerto:** Com AUC-ROC acima de 0,75, o modelo ordena corretamente "
-    "o risco entre alunos em ~75% dos casos — isto é, se você comparar um aluno em risco real "
-    "com um aluno sem risco, o modelo os classifica na ordem certa na maioria das vezes. "
-    "O sistema **prefere alertar** a deixar passar: o threshold foi calibrado para priorizar "
-    "recall (não perder alunos em risco) em detrimento de precisão.",
+    "**O que o modelo realmente prevê:** Defasagem formal significa o aluno estar cursando "
+    "uma fase **menor do que a esperada para sua idade** — não é sinônimo de baixo desempenho. "
+    "Nos dados da ONG, os alunos com defasagem tendem a estar em fases mais avançadas (ex: Fase 9) "
+    "com boa adequação de nível (IAN alto) — ou seja, são estudantes mais velhos que o esperado "
+    "para aquela fase, não necessariamente com indicadores mais baixos. "
+    "Por isso, reduzir apenas os indicadores acadêmicos pode não elevar o risco — o modelo "
+    "considera principalmente a relação entre a **Fase** e os indicadores de adequação de nível.",
     icon="ℹ️"
 )
 
