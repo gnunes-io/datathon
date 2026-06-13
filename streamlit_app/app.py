@@ -98,10 +98,17 @@ feature_cols = model_payload['feature_cols']
 threshold    = model_payload['threshold']
 model_name   = model_payload.get('model_name', 'Modelo')
 
+# Médias de referência: usa as salvas no pkl (treino real) ou fallback hardcoded
+_DEFAULT_REF = {
+    'IAN': 7.5, 'IDA': 6.5, 'IEG': 6.8,
+    'IAA': 7.2, 'IPS': 7.0, 'IPV': 6.3, 'INDE': 6.8
+}
+ref_means = model_payload.get('ref_means', _DEFAULT_REF)
+
 # ── Sidebar — informações do modelo ──────────────────────────────────────────
 with st.sidebar:
     st.image("https://www.passosmagicos.org.br/wp-content/uploads/2020/09/logo-passos-magicos.png",
-             use_column_width=True)
+             use_container_width=True)
     st.markdown("---")
     st.markdown("### Sobre o Modelo")
     st.markdown(f"""
@@ -110,6 +117,8 @@ with st.sidebar:
     - **Treino:** 2022–2023
     - **Validação:** 2024
     """)
+    origem_ref = "dados reais do treino" if 'ref_means' in model_payload else "valores padrão"
+    st.caption(f"Médias de referência: {origem_ref}")
     st.markdown("---")
     st.markdown("### Guia de Indicadores")
     st.markdown("""
@@ -227,13 +236,13 @@ with tab1:
         with res_col2:
             st.markdown("#### Indicadores do Aluno vs Média Esperada")
             indicadores_info = {
-                'IAN': (ian, 7.5, 'Adequação de Nível'),
-                'IDA': (ida, 6.5, 'Desempenho Acadêmico'),
-                'IEG': (ieg, 6.8, 'Engajamento'),
-                'IAA': (iaa, 7.2, 'Autoavaliação'),
-                'IPS': (ips, 7.0, 'Psicossocial'),
-                'IPV': (ipv, 6.3, 'Ponto de Virada'),
-                'INDE': (inde, 6.8, 'Índice Geral'),
+                'IAN':  (ian,  ref_means.get('IAN',  7.5), 'Adequação de Nível'),
+                'IDA':  (ida,  ref_means.get('IDA',  6.5), 'Desempenho Acadêmico'),
+                'IEG':  (ieg,  ref_means.get('IEG',  6.8), 'Engajamento'),
+                'IAA':  (iaa,  ref_means.get('IAA',  7.2), 'Autoavaliação'),
+                'IPS':  (ips,  ref_means.get('IPS',  7.0), 'Psicossocial'),
+                'IPV':  (ipv,  ref_means.get('IPV',  6.3), 'Ponto de Virada'),
+                'INDE': (inde, ref_means.get('INDE', 6.8), 'Índice Geral'),
             }
             for sigla, (valor, media_ref, nome) in indicadores_info.items():
                 delta = valor - media_ref
@@ -247,9 +256,17 @@ with tab1:
 
         with res_col3:
             st.markdown("#### Gráfico de Radar")
-            labels = ['IAN', 'IDA', 'IEG', 'IAA', 'IPS', 'IPV']
-            valores_aluno = [ian, ida, ieg, iaa, ips, ipv]
-            valores_ref   = [7.5, 6.5, 6.8, 7.2, 7.0, 6.3]
+            labels = ['IAN', 'IDA', 'IEG', 'IAA', 'IPS', 'IPV', 'INDE']
+            valores_aluno = [ian, ida, ieg, iaa, ips, ipv, inde]
+            valores_ref   = [
+                ref_means.get('IAN',  7.5),
+                ref_means.get('IDA',  6.5),
+                ref_means.get('IEG',  6.8),
+                ref_means.get('IAA',  7.2),
+                ref_means.get('IPS',  7.0),
+                ref_means.get('IPV',  6.3),
+                ref_means.get('INDE', 6.8),
+            ]
 
             angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
             angles += angles[:1]
@@ -340,17 +357,23 @@ with tab2:
             ips_a  = st.slider("IPS", 0.0, 10.0, 6.5, 0.1, key=f"ips_{i}")
             ipv_a  = st.slider("IPV", 0.0, 10.0, 6.0 + i * 0.2, 0.1, key=f"ipv_{i}")
             inde_a = st.slider("INDE", 0.0, 10.0, 6.2 + i * 0.3, 0.1, key=f"inde_{i}")
+            ipp_a  = st.slider("IPP", 0.0, 10.0, float('nan'), 0.1, key=f"ipp_{i}",
+                               help="Deixe em 0 se não disponível (será tratado como ausente)")
             fase_a = st.selectbox("Fase", list(range(1, 9)), index=2, key=f"fase_{i}")
+            pedra_a = st.selectbox("Pedra", ["Quartzo", "Ágata", "Ametista", "Topázio"],
+                                   index=1, key=f"pedra_{i}")
             alunos_data.append({'nome': nome_a, 'ian': ian_a, 'ida': ida_a, 'ieg': ieg_a,
                                  'iaa': iaa_a, 'ips': ips_a, 'ipv': ipv_a,
-                                 'inde': inde_a, 'fase': fase_a})
+                                 'inde': inde_a, 'fase': fase_a,
+                                 'ipp': ipp_a if ipp_a > 0 else np.nan,
+                                 'pedra': pedra_a})
 
     if st.button("Comparar Alunos", type="primary", use_container_width=True):
         resultados = []
         for a in alunos_data:
             feats = build_features(a['ian'], a['ida'], a['ieg'], a['iaa'], a['ips'],
-                                   np.nan, a['ipv'], a['inde'], a['fase'],
-                                   'Não informado', 'Ágata')
+                                   a.get('ipp', np.nan), a['ipv'], a['inde'], a['fase'],
+                                   'Não informado', a.get('pedra', 'Ágata'))
             df_inp = pd.DataFrame([feats]).reindex(columns=feature_cols)
             prob   = pipeline.predict_proba(df_inp)[:, 1][0]
             resultados.append({'nome': a['nome'], 'prob': prob,
@@ -419,8 +442,13 @@ with tab3:
     | Probabilidade | Nível | Ação Recomendada |
     |---------------|-------|-----------------|
     | < {thr_low:.0%} | 🟢 Baixo | Acompanhamento regular |
-    | {thr_low:.0%} – {thr_high:.0%} | 🟠 Médio | Atenção redobrada, revisão pedagógica |
+    | {thr_low:.0%} – {thr_high:.0%} | 🟠 Médio | Atenção redobrada, revisão pedagógica mensal |
     | > {thr_high:.0%} | 🔴 Alto | Intervenção imediata, plano de suporte individualizado |
+
+    > **Nota sobre o threshold:** o valor de corte ({thr_low:.0%}) foi calibrado pelo modelo para maximizar
+    > Fbeta (β=2), que penaliza 2× mais o falso negativo (aluno em risco não detectado) do que o
+    > falso positivo. A zona "Médio" corresponde aos 15 pontos percentuais acima do corte — intervalo
+    > onde a incerteza do modelo é maior e a equipe pedagógica deve avaliar caso a caso.
 
     #### Limitações
     - O modelo é uma ferramenta de **apoio à decisão**, não um substituto ao julgamento
