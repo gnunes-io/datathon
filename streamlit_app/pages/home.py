@@ -64,14 +64,13 @@ else:
     st.warning("Modelo não carregado — execute `model/modelo_preditivo.ipynb` para gerar o `.pkl`.")
 
 st.info(
-    "**Como interpretar o risco:** O modelo prediz defasagem formal — aluno cursando uma fase "
-    "abaixo da esperada para sua idade. O principal sinal de risco é **IAN alto em fases avançadas**: "
-    "um aluno com IAN=10 (completamente adequado ao nível) pode estar em uma fase fácil demais "
-    "porque está lá há mais anos do que o esperado. Por isso, "
-    "indicadores acadêmicos baixos (IDA, IEG) não elevam necessariamente o risco de defasagem — "
-    "eles indicam *dificuldade na fase atual*, não deslocamento de série. "
-    "O risco sobe quando IAN=10 combinado com Fase elevada sugere um aluno mais velho que o esperado "
-    "para aquela fase.",
+    "**Como interpretar o risco:** O modelo identifica dois perfis de risco: "
+    "(1) aluno **formalmente atrasado de série** (Defasagem ≥ 1 ano) e "
+    "(2) aluno em **Quartzo** (INDE < 5,5 — pior faixa de desenvolvimento), "
+    "que está em risco de se atrasar. "
+    "Indicadores acadêmicos baixos (IDA, IEG, INDE) elevam diretamente o risco — "
+    "um aluno com INDE < 5,5 é sinalizado independentemente de estar formalmente atrasado. "
+    "O threshold foi calibrado por Fbeta (β=2): o sistema **prefere alertar** a deixar passar.",
     icon="ℹ️"
 )
 
