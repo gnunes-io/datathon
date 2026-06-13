@@ -161,10 +161,12 @@ def risk_level(prob, threshold):
 GLOBAL_CSS = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{ background: #F8FAFC; }}
+.block-container {{ padding-top: 1.5rem !important; }}
 [data-testid="stSidebar"] {{ background: {PM_BLUE} !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
 [data-testid="stSidebar"] hr {{ border-color: rgba(255,255,255,0.2); }}
 [data-testid="stSidebar"] .stMarkdown h3 {{ color: {PM_GOLD} !important; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; }}
+[data-testid="stSidebar"] img {{ filter: brightness(0) invert(1); }}
 
 .pm-hero {{
     background: linear-gradient(135deg, #003087 0%, #0052CC 100%);

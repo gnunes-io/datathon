@@ -208,8 +208,7 @@ with result_col:
 st.markdown("---")
 viz_radar, viz_shap = st.columns([1, 1], gap="large")
 
-_DARK = '#0F172A'
-_GRID = 'rgba(255,255,255,0.08)'
+_GRID = '#E2E8F0'
 
 with viz_radar:
     st.markdown('<p class="section-hdr">Perfil do aluno</p>', unsafe_allow_html=True)
@@ -221,28 +220,28 @@ with viz_radar:
     fig_radar = go.Figure()
     fig_radar.add_trace(go.Scatterpolar(
         r=v_aluno + [v_aluno[0]], theta=theta, fill='toself',
-        fillcolor='rgba(99,179,237,0.20)',
-        line=dict(color='#63B3ED', width=2.5),
+        fillcolor='rgba(0,48,135,0.12)',
+        line=dict(color=PM_BLUE, width=2.5),
         name='Aluno', hovertemplate='%{theta}: %{r:.1f}<extra></extra>'
     ))
     fig_radar.add_trace(go.Scatterpolar(
         r=v_ref + [v_ref[0]], theta=theta, fill='toself',
-        fillcolor='rgba(255,255,255,0.03)',
-        line=dict(color='rgba(255,255,255,0.30)', width=1.5, dash='dot'),
+        fillcolor='rgba(0,0,0,0.03)',
+        line=dict(color='#94A3B8', width=1.5, dash='dot'),
         name='Média histórica', hovertemplate='%{theta}: %{r:.1f}<extra></extra>'
     ))
     fig_radar.update_layout(
         polar=dict(
-            bgcolor=_DARK,
+            bgcolor='white',
             radialaxis=dict(
                 visible=True, range=[0, 10],
                 tickvals=[2, 4, 6, 8, 10],
-                tickfont=dict(size=8, color='rgba(255,255,255,0.35)'),
+                tickfont=dict(size=8, color='#94A3B8'),
                 gridcolor=_GRID,
                 linecolor=_GRID,
             ),
             angularaxis=dict(
-                tickfont=dict(size=11, color='white'),
+                tickfont=dict(size=11, color=PM_BLUE, family='sans-serif'),
                 gridcolor=_GRID,
                 linecolor=_GRID,
             ),
@@ -250,12 +249,12 @@ with viz_radar:
         showlegend=True,
         legend=dict(
             orientation='h', yanchor='bottom', y=-0.20,
-            font=dict(size=11, color='white'),
+            font=dict(size=11, color='#334155'),
             bgcolor='rgba(0,0,0,0)',
         ),
         margin=dict(l=55, r=55, t=30, b=65),
         height=400,
-        paper_bgcolor=_DARK,
+        paper_bgcolor='#F8FAFC',
     )
     st.plotly_chart(fig_radar, use_container_width=True)
 
@@ -279,20 +278,20 @@ with viz_shap:
             marker_color=bar_colors,
             hovertemplate='%{y}: %{x:+.3f}<extra></extra>',
         ))
-        fig_shap.add_vline(x=0, line_color='rgba(255,255,255,0.25)', line_width=1)
+        fig_shap.add_vline(x=0, line_color='#64748B', line_width=1)
         fig_shap.update_layout(
             xaxis_title='Impacto na probabilidade de risco (SHAP)',
             xaxis=dict(
-                tickfont=dict(color='rgba(255,255,255,0.5)', size=9),
-                title_font=dict(color='rgba(255,255,255,0.5)', size=10),
+                tickfont=dict(color='#64748B', size=9),
+                title_font=dict(color='#64748B', size=10),
                 gridcolor=_GRID,
-                zerolinecolor='rgba(255,255,255,0.25)',
+                zerolinecolor='#94A3B8',
             ),
-            yaxis=dict(tickfont=dict(size=10, color='white'), gridcolor=_GRID),
+            yaxis=dict(tickfont=dict(size=10, color='#1E293B'), gridcolor=_GRID),
             margin=dict(l=10, r=15, t=10, b=50),
             height=400,
-            paper_bgcolor=_DARK,
-            plot_bgcolor=_DARK,
+            paper_bgcolor='#F8FAFC',
+            plot_bgcolor='white',
         )
         st.plotly_chart(fig_shap, use_container_width=True)
         st.caption("🔴 aumenta o risco · 🟢 reduz o risco · tamanho = magnitude para este aluno")
