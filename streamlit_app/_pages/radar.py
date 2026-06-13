@@ -315,35 +315,85 @@ st.markdown('<p class="section-hdr">Recomendações e próximos passos</p>',
 
 rec_col, pos_col, action_col = st.columns(3, gap="medium")
 
+# Priority order based on model feature importance (most impactful first)
+_IND_PRIORITY = ['INDE', 'IAN', 'IEG', 'IDA', 'IPV', 'IPP', 'IAA', 'IPS']
+
+_IND_VALUES = {
+    'IAN': ian, 'IDA': ida, 'IEG': ieg, 'IAA': iaa,
+    'IPS': ips, 'IPP': ipp, 'IPV': ipv, 'INDE': inde,
+}
+
+_IND_ACTIONS = {
+    'INDE': "Indicador geral comprometido — priorizar intervenção multidimensional",
+    'IAN':  "Reforço pedagógico para nivelação de fase",
+    'IDA':  "Apoio em Matemática e Português",
+    'IEG':  "Investigar causas de baixa participação",
+    'IAA':  "Encaminhar para acompanhamento psicológico",
+    'IPS':  "Agendar avaliação com equipe de psicologia",
+    'IPP':  "Investigar dificuldades específicas de aprendizado",
+    'IPV':  "Reforçar motivação e perspectiva de futuro com o aluno",
+}
+
+_IND_LABELS_PT = {
+    'INDE': 'INDE — Índice Geral',
+    'IAN':  'IAN — Adequação de Nível',
+    'IDA':  'IDA — Desempenho Acadêmico',
+    'IEG':  'IEG — Engajamento',
+    'IAA':  'IAA — Autoavaliação',
+    'IPS':  'IPS — Psicossocial',
+    'IPP':  'IPP — Psicopedagógico',
+    'IPV':  'IPV — Ponto de Virada',
+}
+
+criticos  = []  # val < 5.0
+atencoes  = []  # 5.0 <= val < ref_mean
+positivos = []  # val >= ref_mean
+
+for ind in _IND_PRIORITY:
+    val = _IND_VALUES[ind]
+    if ind == 'IPP' and np.isnan(val):
+        continue
+    ref = ref_means.get(ind, ref_means.get('IPS', 6.5))
+    if val < 5.0:
+        criticos.append((ind, val, ref))
+    elif val < ref:
+        atencoes.append((ind, val, ref))
+    else:
+        positivos.append((ind, val, ref))
+
 with rec_col:
     st.markdown("**⚠️ Fatores de atenção**")
-    alertas = []
-    if ian  < 6:   alertas.append(("IAN baixo",   "Reforço pedagógico para nivelação de fase"))
-    if ida  < 5:   alertas.append(("IDA crítico",  "Apoio em Matemática e Português"))
-    if ieg  < 5:   alertas.append(("IEG baixo",    "Investigar causas de baixa participação"))
-    if iaa  < 5:   alertas.append(("IAA reduzido", "Encaminhar para acompanhamento psicológico"))
-    if ips  < 5:   alertas.append(("IPS baixo",    "Agendar avaliação com equipe de psicologia"))
-    if not np.isnan(ipp) and ipp < 5:
-        alertas.append(("IPP baixo", "Investigar dificuldades específicas de aprendizado"))
-    if not alertas:
-        st.success("Nenhum indicador individual em zona crítica.")
+    if not criticos and not atencoes:
+        st.success("✅ Todos os indicadores acima da média histórica")
     else:
-        for titulo, desc in alertas:
-            st.markdown(f"**🔸 {titulo}**")
-            st.caption(desc)
+        for ind, val, ref in criticos:
+            st.markdown(
+                f"🔴 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(crítico)*"
+            )
+            st.caption(_IND_ACTIONS[ind])
+        for ind, val, ref in atencoes:
+            st.markdown(
+                f"🟡 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(abaixo da média {ref:.1f})*"
+            )
+            st.caption("Monitorar evolução no próximo ciclo")
 
 with pos_col:
     st.markdown("**✅ Pontos positivos**")
-    pontos = []
-    if ian  >= 8:  pontos.append("Excelente adequação de nível")
-    if ida  >= 7:  pontos.append("Bom desempenho acadêmico")
-    if ieg  >= 7:  pontos.append("Alto engajamento com atividades")
-    if iaa  >= 7:  pontos.append("Boa autoavaliação — aluno confiante")
-    if ips  >= 7:  pontos.append("Bom indicador psicossocial")
-    if ipv  >= 7:  pontos.append("Próximo do ponto de virada")
-    if not pontos: pontos.append("Acompanhar evolução nos próximos ciclos")
-    for p in pontos:
-        st.markdown(f"✅ {p}")
+    if not positivos:
+        st.caption("Acompanhar evolução nos próximos ciclos")
+    else:
+        _POS_DESC = {
+            'INDE': "Índice geral acima da média",
+            'IAN':  "Boa adequação de nível",
+            'IDA':  "Bom desempenho acadêmico",
+            'IEG':  "Alto engajamento com atividades",
+            'IAA':  "Boa autoavaliação — aluno confiante",
+            'IPS':  "Bom indicador psicossocial",
+            'IPP':  "Bom indicador psicopedagógico",
+            'IPV':  "Próximo ou além do ponto de virada",
+        }
+        for ind, val, ref in positivos:
+            st.markdown(f"✅ {_POS_DESC[ind]} ({val:.1f})")
 
 with action_col:
     st.markdown("**📋 Próximos passos**")

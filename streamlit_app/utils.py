@@ -118,7 +118,12 @@ def predict(payload, feats_dict):
     explainer = payload.get('shap_explainer')
     if explainer is not None:
         try:
-            X_imp = pipeline.named_steps['imputer'].transform(df_in)
+            imp   = pipeline.named_steps['imputer']
+            X_imp = imp.transform(df_in)
+            # sklearn 1.6+ drops all-NaN training features; determine which
+            # columns the imputer actually kept so the SHAP index is correct.
+            valid_mask = ~np.isnan(imp.statistics_)
+            valid_cols = [c for c, v in zip(feature_cols, valid_mask) if v]
             sv    = explainer.shap_values(X_imp, check_additivity=False)
             # Normalise to 1-D array of shape (n_features,) for class 1
             sv = np.array(sv[1] if isinstance(sv, list) else sv)
@@ -131,8 +136,8 @@ def predict(payload, feats_dict):
                     sv = sv[:, 1]
                 else:
                     sv = sv[0]
-            if len(sv) == len(feature_cols):
-                shap_vals = pd.Series(sv, index=feature_cols)
+            if len(sv) == len(valid_cols):
+                shap_vals = pd.Series(sv, index=valid_cols)
         except Exception:
             pass
 

@@ -26,7 +26,7 @@ load_model()
 pg = st.navigation([
     st.Page("_pages/home.py",  title="Início",           icon="🏠"),
     st.Page("_pages/radar.py", title="Radar de Risco",   icon="🎯"),
-    st.Page("_pages/eda.py",   title="Dados Históricos", icon="📊"),
+    st.Page("_pages/eda.py",   title="Análise Rápida",   icon="📊"),
 ])
 
 pg.run()
