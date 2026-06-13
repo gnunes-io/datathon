@@ -119,7 +119,7 @@ def predict(payload, feats_dict):
     if explainer is not None:
         try:
             X_imp = pipeline.named_steps['imputer'].transform(df_in)
-            sv    = explainer.shap_values(X_imp)
+            sv    = explainer.shap_values(X_imp, check_additivity=False)
             # Normalise to 1-D array of shape (n_features,) for class 1
             sv = np.array(sv[1] if isinstance(sv, list) else sv)
             if sv.ndim == 3:        # (samples, features, classes)

@@ -105,22 +105,13 @@ with form_col:
     with ps1:
         iaa = num_input("IAA — Autoavaliação", "iaa", "IAA",
                         "Como o aluno avalia seu próprio progresso")
-        ipv = num_input("IPV — Ponto de Virada", "ipv", "IPV",
-                        "Indica transformação na trajetória do aluno")
-    with ps2:
         ips = num_input("IPS — Psicossocial", "ips", "IPS",
                         "Aspectos emocionais e relacionamentos sociais")
-
-        ipp_ok = st.checkbox("IPP disponível para este aluno?", value=True, key="ipp_ok",
-                             help="IPP só existe a partir de 2023. Desmarque se não houver avaliação.")
-        if ipp_ok:
-            ipp = st.number_input("IPP — Psicopedagógico", 0.0, 10.0,
-                                  ref_means.get('IPP', ref_means.get('IPS', 6.5)),
-                                  0.5, key="ipp_val",
-                                  help="Avaliação psicopedagógica — disponível a partir de 2023")
-        else:
-            ipp = np.nan
-            st.caption("IPP será imputado pela mediana histórica do treino.")
+    with ps2:
+        ipv = num_input("IPV — Ponto de Virada", "ipv", "IPV",
+                        "Indica transformação na trajetória do aluno")
+        ipp = num_input("IPP — Psicopedagógico", "ipp_val", "IPS",
+                        "Avaliação psicopedagógica — disponível a partir de 2023 (deixe na média se não houver)")
 
 # ── Coluna DIREITA — resultado ─────────────────────────────────────────────────
 with result_col:
@@ -151,18 +142,12 @@ with result_col:
     else:
         st.error("Acima do limiar de risco. Intervenção prioritária recomendada.", icon="🚨")
 
-    prev_2024 = 0.119
-    st.caption(
-        f"Contexto: em 2024, {prev_2024:.0%} dos alunos foram classificados em risco de defasagem."
-    )
-
     # Tabela Indicadores vs média histórica
     st.markdown('<p class="section-hdr">Indicadores vs média histórica</p>',
                 unsafe_allow_html=True)
 
     indicadores_exibir = [(s, feats[s], ref_means.get(s, 6.5)) for s in RADAR_LABELS]
-    if not np.isnan(ipp):
-        indicadores_exibir.append(('IPP', ipp, ref_means.get('IPP', ref_means.get('IPS', 6.5))))
+    indicadores_exibir.append(('IPP', ipp, ref_means.get('IPP', ref_means.get('IPS', 6.5))))
 
     rows_html = ""
     for sigla, val, ref in indicadores_exibir:

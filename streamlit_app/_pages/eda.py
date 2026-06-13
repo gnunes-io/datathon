@@ -19,31 +19,54 @@ PEDRA_ORDER    = ['Quartzo', 'Ágata', 'Ametista', 'Topázio']
 PEDRA_COLORS   = {'Quartzo': '#6B7280', 'Ágata': '#3B82F6',
                   'Ametista': '#8B5CF6', 'Topázio': '#F59E0B'}
 
+import re as _re
+
 def _parse_float(s):
     if pd.isna(s): return np.nan
     try: return float(str(s).replace(',', '.'))
     except: return np.nan
 
+def _parse_fase(x):
+    if pd.isna(x): return np.nan
+    s = str(x).strip()
+    if s.upper() == 'ALFA': return 0.0
+    try: return float(s)
+    except: pass
+    m = _re.match(r'FASE\s*(\d+)', s, _re.IGNORECASE)
+    if m: return float(m.group(1))
+    m = _re.match(r'^(\d+)', s)
+    if m: return float(m.group(1))
+    return np.nan
+
+def _find_col(df, keyword, ano):
+    full, short = str(ano), str(ano)[-2:]
+    cols = [c for c in df.columns if keyword in c and full in c]
+    if cols: return cols[0]
+    cols = [c for c in df.columns if keyword in c
+            and c.strip().endswith(short) and len(c) <= len(keyword) + 5]
+    return cols[0] if cols else None
+
 def _load_year(path, ano):
     df = pd.read_csv(path, encoding='latin1')
     df['ano'] = ano
 
-    inde_col  = next((c for c in df.columns if 'INDE' in c and str(ano) in c), None)
+    inde_col  = _find_col(df, 'INDE', ano)
     df['INDE'] = df[inde_col].apply(_parse_float) if inde_col else np.nan
 
-    pedra_col  = next((c for c in df.columns if 'Pedra' in c and str(ano) in c), None)
+    pedra_col  = _find_col(df, 'Pedra', ano)
     df['Pedra'] = df[pedra_col] if pedra_col else np.nan
 
     for col in INDICATOR_COLS[:-1]:   # todos exceto INDE (já processado)
         df[col] = df[col].apply(_parse_float) if col in df.columns else np.nan
 
-    df['Fase']       = pd.to_numeric(df.get('Fase', np.nan), errors='coerce')
-    df['Defasagem']  = pd.to_numeric(
+    fase_raw      = df.get('Fase', pd.Series([np.nan] * len(df)))
+    df['Fase']    = fase_raw.apply(_parse_fase)
+    df['Defasagem'] = pd.to_numeric(
         df.get('Defasagem', df.get('Defas', np.nan)), errors='coerce'
     )
-    df['target']     = (df['Defasagem'] >= 1).astype(float)
-    genero_col       = next((c for c in df.columns if 'n' in c.lower() and 'nero' in c.lower()), None)
-    df['Genero']     = df[genero_col].map(
+    df['target']  = (df['Defasagem'] >= 1).astype(float)
+    genero_col    = next((c for c in df.columns if 'n' in c.lower() and 'nero' in c.lower()), None)
+    df['Genero']  = df[genero_col].map(
         {'F': 'Feminino', 'M': 'Masculino', 'Feminino': 'Feminino', 'Masculino': 'Masculino'}
     ) if genero_col else np.nan
     return df
