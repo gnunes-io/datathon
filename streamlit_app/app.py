@@ -16,48 +16,17 @@ st.set_page_config(
 )
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
+# Logo no topo da sidebar, acima dos links de navegação
+if os.path.exists(LOGO_PATH):
+    st.logo(LOGO_PATH, size="large")
+
 # Pré-carrega o modelo para que o cache fique disponível em todas as páginas
-payload = load_model()
+load_model()
 
 pg = st.navigation([
     st.Page("pages/home.py",  title="Início",           icon="🏠"),
     st.Page("pages/radar.py", title="Radar de Risco",   icon="🎯"),
     st.Page("pages/eda.py",   title="Dados Históricos", icon="📊"),
 ])
-
-# ── Sidebar ────────────────────────────────────────────────────────────────────
-with st.sidebar:
-    if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, use_container_width=True)
-    else:
-        st.markdown(f"### 🌟 Passos Mágicos")
-
-    st.markdown("---")
-
-    if payload:
-        st.markdown("### Modelo")
-        st.markdown(f"""
-        **{payload.get('model_name', 'Modelo')}**
-        - Treino: {payload.get('train_years', [2022])}
-        - Validação: {payload.get('val_year', 2023)}
-        - Teste: {payload.get('test_year', 2024)}
-        - AUC-ROC: **{payload.get('auc_roc', 0):.3f}**
-        - Threshold: **{payload.get('threshold', 0):.2f}**
-        - SHAP: {"✅" if payload.get('shap_explainer') else "⚠️ ausente"}
-        """)
-        st.caption("Threshold calibrado em 2023 (validação)")
-    else:
-        st.warning("⚠️ Modelo não encontrado.\nExecute `model/modelo_preditivo.ipynb`.")
-
-    st.markdown("---")
-    st.markdown("### Pedras Classificatórias")
-    st.markdown("""
-    | Pedra | INDE |
-    |-------|------|
-    | 🪨 Quartzo | < 5,5 |
-    | 💎 Ágata | 5,5 – 7,0 |
-    | 💜 Ametista | 7,0 – 8,5 |
-    | ⭐ Topázio | ≥ 8,5 |
-    """)
 
 pg.run()

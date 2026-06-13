@@ -9,18 +9,17 @@ from utils import LOGO_PATH, INDICATORS, PEDRAS_INFO, PM_BLUE, PM_GOLD, load_mod
 payload = load_model()
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
-col_logo, col_hero = st.columns([1, 3], gap="large")
-with col_logo:
+_, logo_col, _ = st.columns([2, 1, 2])
+with logo_col:
     if os.path.exists(LOGO_PATH):
         st.image(LOGO_PATH, use_container_width=True)
 
-with col_hero:
-    st.markdown("""
-    <div class="pm-hero">
-        <h1>🌟 Radar de Risco — Passos Mágicos</h1>
-        <p>Sistema de apoio à decisão para identificação precoce de alunos em risco de defasagem escolar</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div class="pm-hero">
+    <h1>Radar de Risco — Passos Mágicos</h1>
+    <p>Sistema de apoio à decisão para identificação precoce de alunos em risco de defasagem escolar</p>
+</div>
+""", unsafe_allow_html=True)
 
 # ── Como funciona ──────────────────────────────────────────────────────────────
 st.markdown('<p class="section-hdr">Como funciona</p>', unsafe_allow_html=True)

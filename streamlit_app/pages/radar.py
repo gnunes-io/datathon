@@ -148,31 +148,61 @@ with result_col:
         f"Contexto: em 2024, {prev_2024:.0%} dos alunos foram classificados em risco de defasagem."
     )
 
-    # Deltas vs média histórica
+    # Deltas vs média histórica — tabela compacta, dark-mode compatível
     st.markdown('<p class="section-hdr">Indicadores vs média histórica</p>',
                 unsafe_allow_html=True)
-    for sigla in RADAR_LABELS:
-        val = feats[sigla]
-        ref = ref_means.get(sigla, 6.5)
-        delta = val - ref
-        cls  = "above" if delta >= 0 else "below"
-        sinal = f"+{delta:.1f}" if delta >= 0 else f"{delta:.1f}"
-        st.markdown(f"""
-        <div class="metric-row {cls}">
-            <span><b>{sigla}</b> — {val:.1f}</span>
-            <span class="delta">{sinal} vs ref ({ref:.1f})</span>
-        </div>""", unsafe_allow_html=True)
 
+    indicadores_exibir = [(s, feats[s], ref_means.get(s, 6.5)) for s in RADAR_LABELS]
     if not np.isnan(ipp):
-        ref_ipp = ref_means.get('IPP', ref_means.get('IPS', 6.5))
-        delta   = ipp - ref_ipp
-        cls     = "above" if delta >= 0 else "below"
-        sinal   = f"+{delta:.1f}" if delta >= 0 else f"{delta:.1f}"
-        st.markdown(f"""
-        <div class="metric-row {cls}">
-            <span><b>IPP</b> — {ipp:.1f}</span>
-            <span class="delta">{sinal} vs ref ({ref_ipp:.1f})</span>
-        </div>""", unsafe_allow_html=True)
+        indicadores_exibir.append(('IPP', ipp, ref_means.get('IPP', ref_means.get('IPS', 6.5))))
+
+    rows_html = ""
+    for sigla, val, ref in indicadores_exibir:
+        delta  = val - ref
+        sinal  = f"+{delta:.1f}" if delta >= 0 else f"{delta:.1f}"
+        arrow  = "▲" if delta >= 0 else "▼"
+        cor    = "#059669" if delta >= 0 else "#DC2626"
+        border = "#059669" if delta >= 0 else "#DC2626"
+        # barra visual 0–10
+        pct_val = int(val * 10)
+        pct_ref = int(ref * 10)
+        rows_html += f"""
+        <tr style="border-bottom:1px solid rgba(128,128,128,0.12);">
+          <td style="padding:0.28rem 0.5rem; font-weight:600; white-space:nowrap;
+                     border-left:3px solid {border}; padding-left:0.6rem;">{sigla}</td>
+          <td style="padding:0.28rem 0.5rem; text-align:center; font-variant-numeric:tabular-nums;">
+            {val:.1f}
+          </td>
+          <td style="padding:0.28rem 0.5rem; width:55%;">
+            <div style="background:rgba(128,128,128,0.12); border-radius:4px; height:6px; position:relative;">
+              <div style="position:absolute; background:{cor}; border-radius:4px; height:6px;
+                          width:{pct_val}%; max-width:100%;"></div>
+              <div style="position:absolute; left:{pct_ref}%; top:-2px; width:2px; height:10px;
+                          background:rgba(128,128,128,0.5);"></div>
+            </div>
+          </td>
+          <td style="padding:0.28rem 0.5rem; text-align:right; font-size:0.78rem;
+                     color:{cor}; white-space:nowrap; font-variant-numeric:tabular-nums;">
+            {arrow} {sinal}
+          </td>
+        </tr>"""
+
+    st.markdown(f"""
+    <table style="width:100%; border-collapse:collapse; font-size:0.84rem;">
+      <thead>
+        <tr style="opacity:0.5; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;">
+          <th style="text-align:left; padding:0.2rem 0.5rem 0.2rem 0.6rem;">Ind.</th>
+          <th style="text-align:center; padding:0.2rem 0.5rem;">Valor</th>
+          <th style="padding:0.2rem 0.5rem;"></th>
+          <th style="text-align:right; padding:0.2rem 0.5rem;">Δ</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}</tbody>
+    </table>
+    <p style="font-size:0.72rem; opacity:0.45; margin-top:0.35rem;">
+      Barra cinza: escala 0–10 · traço = média histórica · cor = diferença vs ref
+    </p>
+    """, unsafe_allow_html=True)
 
     # Botão para salvar no histórico da sessão
     st.markdown("<br>", unsafe_allow_html=True)

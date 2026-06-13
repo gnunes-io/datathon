@@ -166,12 +166,13 @@ GLOBAL_CSS = f"""
 
 .metric-row {{
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0.4rem 0.75rem; border-radius: 8px;
-    background: #F1F5F9; margin-bottom: 0.3rem; font-size: 0.85rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.65rem;
+    border-radius: 6px; margin-bottom: 0.25rem; font-size: 0.84rem;
+    border-left: 3px solid transparent;
 }}
-.metric-row.above {{ border-left: 3px solid {RISK_LOW}; }}
-.metric-row.below {{ border-left: 3px solid {RISK_HIGH}; }}
-.metric-row .delta {{ font-size: 0.75rem; color: #64748B; }}
+.metric-row.above {{ border-left-color: {RISK_LOW}; }}
+.metric-row.below {{ border-left-color: {RISK_HIGH}; }}
+.metric-row .delta {{ font-size: 0.75rem; opacity: 0.6; }}
 
 .step-card {{
     background: white; border-radius: 12px; padding: 1.25rem 1rem;
