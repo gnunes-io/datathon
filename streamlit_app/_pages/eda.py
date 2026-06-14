@@ -197,7 +197,7 @@ fig_cr = go.Figure(go.Scatter(
     hovertemplate='%{x}: %{y} alunos<extra></extra>',
 ))
 fig_cr.update_layout(
-    **_layout(height=310, margin=dict(t=55, b=40, l=60, r=20)),
+    **_layout(height=310, margin=dict(t=55, b=40, l=60, r=80)),
     xaxis=dict(tickvals=[2022, 2023, 2024], gridcolor=_GRID, title='Ano'),
     yaxis=dict(title='Nº de alunos', gridcolor=_GRID, rangemode='tozero'),
 )
@@ -242,9 +242,11 @@ pedra_dist['pct']       = pedra_dist['n'] / pedra_dist['total_ano'] * 100
 quartz = pedra_dist[pedra_dist['Pedra'] == 'Quartzo'].sort_values('ano')
 if len(quartz) >= 2:
     dq = quartz['pct'].iloc[-1] - quartz['pct'].iloc[0]
+    _ano_ini = int(quartz['ano'].iloc[0])
+    _ano_fim = int(quartz['ano'].iloc[-1])
     _insight(
         f"A proporção de Quartzo <strong>{'caiu' if dq < 0 else 'subiu'} "
-        f"{abs(dq):.1f} p.p.</strong> entre 2022 e 2024 "
+        f"{abs(dq):.1f} p.p.</strong> entre {_ano_ini} e {_ano_fim} "
         f"({quartz['pct'].iloc[0]:.0f}% → {quartz['pct'].iloc[-1]:.0f}%). "
         "Reduzir Quartzo é o principal KPI de impacto da ONG."
     )
@@ -321,13 +323,16 @@ with tab_fase:
     )
     st.plotly_chart(fig_rf, use_container_width=True)
 
-    top_f = rf.iloc[-1]
-    fase_nome = 'Alfa' if int(top_f['Fase']) == 0 else f"Fase {int(top_f['Fase'])}"
+    top_f    = rf.iloc[-1]
+    bot_f    = rf.iloc[0]
+    top_nome = 'Alfa' if int(top_f['Fase']) == 0 else f"Fase {int(top_f['Fase'])}"
+    bot_nome = 'Alfa' if int(bot_f['Fase']) == 0 else f"Fase {int(bot_f['Fase'])}"
     _insight(
-        f"<strong>{fase_nome}</strong> concentra a maior taxa de risco "
+        f"<strong>{top_nome}</strong> concentra a maior taxa de risco "
         f"({top_f['Taxa %']:.0f}% — {int(top_f['Risco'])} de {int(top_f['Total'])} alunos). "
-        "Fases iniciais tendem a ter maior risco por concentrar alunos em processo de nivelamento. "
-        "Considere correlacionar com o volume total por fase ao priorizar intervenções."
+        f"<strong>{bot_nome}</strong> tem a menor ({bot_f['Taxa %']:.0f}%). "
+        "Considere cruzar taxa com volume total por fase para priorizar intervenções — "
+        "alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
     )
 
 st.markdown("---")
@@ -355,8 +360,10 @@ fig_if.add_hline(y=5.5, line_dash='dot', line_color='#DC2626', line_width=1.5,
 fig_if.add_hline(y=7.0, line_dash='dot', line_color='#3B82F6', line_width=1.5,
                  annotation_text='Ágata ↔ Ametista (7,0)', annotation_position='top right',
                  annotation_font_size=10)
-fig_if.add_hrect(y0=4, y1=5.5,  fillcolor='rgba(220,38,38,0.04)',  line_width=0)
+# Ametista | Topázio threshold (8.5) is above the zoom range (4–8) — omitted intentionally
+fig_if.add_hrect(y0=4,   y1=5.5, fillcolor='rgba(220,38,38,0.05)',  line_width=0)
 fig_if.add_hrect(y0=5.5, y1=7.0, fillcolor='rgba(59,130,246,0.04)', line_width=0)
+fig_if.add_hrect(y0=7.0, y1=8.0, fillcolor='rgba(139,92,246,0.04)', line_width=0)
 fig_if.update_traces(line_width=2.5, marker_size=9)
 fig_if.update_layout(
     **_layout(height=380),
@@ -437,14 +444,12 @@ if not dff_sc.empty:
     )
     st.plotly_chart(fig_sc, use_container_width=True)
 
-    n_baixo_tudo     = ((dff_sc['IEG'] < med_ieg) & (dff_sc['IDA'] < med_ida)).sum()
-    n_eng_sem_desemp = ((dff_sc['IEG'] >= med_ieg) & (dff_sc['IDA'] < med_ida)).sum()
-    pct_baixo = n_baixo_tudo / len(dff_sc) * 100
+    pct_baixo = _nq1 / len(dff_sc) * 100
     _insight(
-        f"<strong>{pct_baixo:.0f}% dos alunos de 2024</strong> estão abaixo da mediana nos dois eixos — "
-        "prioridade máxima de intervenção multidimensional. "
-        f"Outros <strong>{n_eng_sem_desemp}</strong> alunos têm engajamento acima da mediana mas "
-        "desempenho abaixo: participam mas podem ter dificuldades específicas de aprendizado — "
+        f"<strong>{pct_baixo:.0f}% dos alunos de 2024</strong> ({_nq1} alunos) estão abaixo da mediana "
+        "nos dois eixos — prioridade máxima de intervenção multidimensional. "
+        f"Outros <strong>{_nq4}</strong> alunos têm bom engajamento mas desempenho abaixo da mediana: "
+        "participam das atividades mas podem ter dificuldades específicas de aprendizado — "
         "indicado para avaliação psicopedagógica (IPP)."
     )
 
@@ -461,20 +466,21 @@ rf2 = (dff[dff['Fase'].notna() & dff['target'].notna()]
        .agg(['mean', 'count'])
        .reset_index()
        .rename(columns={'mean': 'Taxa', 'count': 'n'}))
-rf2['Fase']   = rf2['Fase'].astype(int)
-rf2['Taxa %'] = rf2['Taxa'] * 100
+rf2['Fase']      = rf2['Fase'].astype(int)
+rf2['Taxa %']    = rf2['Taxa'] * 100
+rf2['FaseLabel'] = rf2['Fase'].apply(lambda f: 'Alfa' if f == 0 else f'F{f}')
 rf2 = rf2.sort_values('Fase')
 
 fig_fun = go.Figure()
 fig_fun.add_trace(go.Bar(
-    x=rf2['Fase'].astype(str), y=rf2['n'],
+    x=rf2['FaseLabel'], y=rf2['n'],
     name='Total de alunos',
     marker_color='rgba(0,48,135,0.12)',
     yaxis='y2',
-    hovertemplate='Fase %{x}: %{y} alunos<extra></extra>',
+    hovertemplate='%{x}: %{y} alunos<extra></extra>',
 ))
 fig_fun.add_trace(go.Scatter(
-    x=rf2['Fase'].astype(str), y=rf2['Taxa %'],
+    x=rf2['FaseLabel'], y=rf2['Taxa %'],
     name='Taxa de risco (%)',
     mode='lines+markers+text',
     line=dict(color=RISK_HIGH, width=3),
@@ -485,11 +491,11 @@ fig_fun.add_trace(go.Scatter(
     text=[f"{v:.0f}%" for v in rf2['Taxa %']],
     textposition='top center',
     textfont=dict(size=10),
-    hovertemplate='Fase %{x}: %{y:.1f}% em risco<extra></extra>',
+    hovertemplate='%{x}: %{y:.1f}% em risco<extra></extra>',
 ))
 fig_fun.update_layout(
     **_layout(height=380),
-    xaxis=dict(title='Fase escolar', tickprefix='F'),
+    xaxis=dict(title='Fase escolar'),
     yaxis=dict(title='Taxa de risco (%)', range=[0, 110], gridcolor=_GRID),
     yaxis2=dict(title='Nº de alunos', overlaying='y', side='right',
                 showgrid=False, range=[0, rf2['n'].max() * 4]),
@@ -498,13 +504,14 @@ fig_fun.update_layout(
 )
 st.plotly_chart(fig_fun, use_container_width=True)
 
-fase_max = rf2.loc[rf2['Taxa %'].idxmax()]
+fase_max     = rf2.loc[rf2['Taxa %'].idxmax()]
 fase_max_vol = rf2.loc[(rf2['Taxa %'] * rf2['n']).idxmax()]
+_fn = lambda f: 'Alfa' if int(f) == 0 else f"Fase {int(f)}"
 _insight(
-    f"<strong>Fase {int(fase_max['Fase'])}</strong> tem a maior taxa de risco ({fase_max['Taxa %']:.0f}%). "
-    f"Mas <strong>Fase {int(fase_max_vol['Fase'])}</strong> tem o maior volume de alunos em risco "
+    f"<strong>{_fn(fase_max['Fase'])}</strong> tem a maior taxa de risco ({fase_max['Taxa %']:.0f}%). "
+    f"Mas <strong>{_fn(fase_max_vol['Fase'])}</strong> tem o maior volume absoluto de alunos em risco "
     f"({int(fase_max_vol['Taxa %'] * fase_max_vol['n'] / 100):.0f} alunos) — "
-    "alta taxa numa fase com poucos alunos pode ser menos prioritária do que taxa moderada com volume alto."
+    "alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
 )
 
 st.markdown("---")
@@ -549,7 +556,7 @@ st.plotly_chart(fig_hist, use_container_width=True)
 _insight(
     "Observe os picos próximos às linhas verticais — esses são os 'near misses'. "
     "Alunos levemente abaixo de 5,5 são os que mais se beneficiam de uma intervenção focada. "
-    "Se o pico de 2022 se moveu para a direita em 2024, o programa está elevando o INDE do grupo como um todo."
+    "Se a curva do ano mais recente se deslocou para a direita, o programa está elevando o INDE do grupo como um todo."
 )
 
 st.markdown("---")
