@@ -50,13 +50,24 @@ def _find_col(df, keyword, ano):
             and c.strip().endswith(short) and len(c) <= len(keyword) + 5]
     return cols[0] if cols else None
 
+def _inde_to_pedra(v):
+    if pd.isna(v): return np.nan
+    if v < 5.5: return 'Quartzo'
+    if v < 7.0: return 'Ágata'
+    if v < 8.5: return 'Ametista'
+    return 'Topázio'
+
 def _load_year(path, ano):
     df = pd.read_csv(path, encoding='latin1')
     df['ano'] = ano
+    # RA
+    df['RA'] = df['RA'].astype(str) if 'RA' in df.columns else df.index.astype(str)
+    # INDE
     inde_col  = _find_col(df, 'INDE', ano)
     df['INDE'] = df[inde_col].apply(_parse_float) if inde_col else np.nan
-    pedra_col  = _find_col(df, 'Pedra', ano)
-    df['Pedra'] = df[pedra_col] if pedra_col else np.nan
+    # Pedra derivada do INDE (evita problemas de encoding nos CSVs)
+    df['Pedra'] = df['INDE'].apply(_inde_to_pedra)
+    # Indicators
     for col in INDICATOR_COLS[:-1]:
         df[col] = df[col].apply(_parse_float) if col in df.columns else np.nan
     df['Fase']    = df.get('Fase', pd.Series([np.nan] * len(df))).apply(_parse_fase)
@@ -121,10 +132,11 @@ with st.sidebar:
     fase_range = st.slider("Faixa de fase", 0, 9, (0, 9),
                            help="0 = Fase Alfa (alfabetização)")
 
+# NaN values pass through when field is missing; filters apply only to known values
 mask = (
     df['ano'].isin(anos_sel) &
-    df['Pedra'].isin(pedras_sel) &
-    df['Fase'].between(fase_range[0], fase_range[1])
+    (df['Pedra'].isin(pedras_sel) | df['Pedra'].isna()) &
+    (df['Fase'].between(fase_range[0], fase_range[1]) | df['Fase'].isna())
 )
 dff = df[mask].copy()
 if len(dff) == 0:
@@ -140,12 +152,10 @@ inde_medio      = dff['INDE'].mean()
 taxa_risco      = dff['target'].mean()
 taxa_def_formal = dff['defasagem_formal'].mean()
 pedra_mais      = dff['Pedra'].value_counts().idxmax() if dff['Pedra'].notna().any() else '—'
-inde_2022       = df[df['ano'] == 2022]['INDE'].mean()
-delta_inde      = f"{inde_medio - inde_2022:+.2f} vs 2022" if 2022 in anos_sel and len(anos_sel) > 1 else None
 
 m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Alunos no período",    f"{len(dff):,}".replace(",", "."))
-m2.metric("INDE médio",           f"{inde_medio:.2f}", delta_inde)
+m2.metric("INDE médio",           f"{inde_medio:.2f}")
 m3.metric("Risco composto",       f"{taxa_risco:.1%}",
           help="Defasagem ≥ 1 ano OU INDE < 5,5 — alinhado ao target do modelo")
 m4.metric("Defasagem formal",     f"{taxa_def_formal:.1%}",
@@ -160,20 +170,31 @@ st.markdown("---")
 st.markdown('<p class="section-hdr">Crescimento do programa</p>', unsafe_allow_html=True)
 
 contagem = df.groupby('ano').size().reset_index(name='Alunos')
+base_2022 = contagem.loc[contagem['ano'] == 2022, 'Alunos'].values[0] if 2022 in contagem['ano'].values else None
+
+_labels = []
+for _, row in contagem.iterrows():
+    if base_2022 is None or row['ano'] == 2022:
+        _labels.append(str(int(row['Alunos'])))
+    else:
+        pct = (row['Alunos'] / base_2022 - 1) * 100
+        sign = '+' if pct >= 0 else ''
+        _labels.append(f"{int(row['Alunos'])}<br>({sign}{pct:.0f}% vs 2022)")
+
 fig_cr = go.Figure(go.Scatter(
     x=contagem['ano'], y=contagem['Alunos'],
     mode='lines+markers+text',
     line=dict(color=PM_BLUE, width=3),
     marker=dict(size=12, color=PM_BLUE),
-    text=contagem['Alunos'],
+    text=_labels,
     textposition='top center',
-    textfont=dict(size=13, color=PM_BLUE),
+    textfont=dict(size=12, color=PM_BLUE),
     fill='tozeroy', fillcolor='rgba(0,48,135,0.07)',
     hovertemplate='%{x}: %{y} alunos<extra></extra>',
 ))
 fig_cr.update_layout(
-    **_layout(height=280),
-    xaxis=dict(tickvals=[2022, 2023, 2024], gridcolor=_GRID),
+    **_layout(height=310, margin=dict(t=55, b=40, l=60, r=20)),
+    xaxis=dict(tickvals=[2022, 2023, 2024], gridcolor=_GRID, title='Ano'),
     yaxis=dict(title='Nº de alunos', gridcolor=_GRID, rangemode='tozero'),
 )
 st.plotly_chart(fig_cr, use_container_width=True)
@@ -188,61 +209,41 @@ _insight(
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 3. PEDRAS POR ANO — proporção % e volume
+# 3. PEDRAS POR ANO — volume absoluto
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">Distribuição das Pedras por ano</p>', unsafe_allow_html=True)
 
 pedra_dist = (dff[dff['Pedra'].notna()]
               .groupby(['ano', 'Pedra'], observed=True)
               .size().reset_index(name='n'))
+
+fig_pa = px.bar(
+    pedra_dist, x='ano', y='n', color='Pedra',
+    barmode='group',
+    color_discrete_map=PEDRA_COLORS,
+    category_orders={'Pedra': PEDRA_ORDER},
+    labels={'ano': 'Ano', 'n': 'Nº de alunos'},
+    text='n',
+)
+fig_pa.update_traces(textposition='outside', textfont_size=11)
+fig_pa.update_layout(
+    **_layout(height=360, margin=dict(t=40, b=60)),
+    xaxis=dict(tickvals=[2022, 2023, 2024]),
+    legend=dict(orientation='h', yanchor='bottom', y=-0.3),
+)
+st.plotly_chart(fig_pa, use_container_width=True)
+
 pedra_dist['total_ano'] = pedra_dist.groupby('ano')['n'].transform('sum')
 pedra_dist['pct']       = pedra_dist['n'] / pedra_dist['total_ano'] * 100
-
-tab_pct, tab_abs = st.tabs(["Proporção % — comparação justa entre anos", "Volume absoluto"])
-
-with tab_pct:
-    fig_pp = px.bar(
-        pedra_dist, x='ano', y='pct', color='Pedra',
-        barmode='stack',
-        color_discrete_map=PEDRA_COLORS,
-        category_orders={'Pedra': PEDRA_ORDER},
-        labels={'ano': 'Ano', 'pct': '% de alunos'},
-        text=pedra_dist['pct'].map(lambda v: f"{v:.0f}%" if v >= 5 else ''),
+quartz = pedra_dist[pedra_dist['Pedra'] == 'Quartzo'].sort_values('ano')
+if len(quartz) >= 2:
+    dq = quartz['pct'].iloc[-1] - quartz['pct'].iloc[0]
+    _insight(
+        f"A proporção de Quartzo <strong>{'caiu' if dq < 0 else 'subiu'} "
+        f"{abs(dq):.1f} p.p.</strong> entre 2022 e 2024 "
+        f"({quartz['pct'].iloc[0]:.0f}% → {quartz['pct'].iloc[-1]:.0f}%). "
+        "Reduzir Quartzo é o principal KPI de impacto da ONG."
     )
-    fig_pp.update_traces(textposition='inside', textfont_size=11)
-    fig_pp.update_layout(
-        **_layout(height=340),
-        xaxis=dict(tickvals=[2022, 2023, 2024]),
-        yaxis=dict(range=[0, 105], title='% de alunos'),
-        legend=dict(orientation='h', yanchor='bottom', y=-0.35),
-    )
-    st.plotly_chart(fig_pp, use_container_width=True)
-
-    quartz = pedra_dist[pedra_dist['Pedra'] == 'Quartzo'].sort_values('ano')
-    if len(quartz) >= 2:
-        dq = quartz['pct'].iloc[-1] - quartz['pct'].iloc[0]
-        _insight(
-            f"A proporção de Quartzo <strong>{'caiu' if dq < 0 else 'subiu'} "
-            f"{abs(dq):.1f} p.p.</strong> entre 2022 e 2024 "
-            f"({quartz['pct'].iloc[0]:.0f}% → {quartz['pct'].iloc[-1]:.0f}%). "
-            "Reduzir Quartzo é o principal KPI de impacto da ONG — use a visão % para comparar "
-            "anos com volumes diferentes."
-        )
-
-with tab_abs:
-    fig_pa = px.bar(
-        pedra_dist, x='ano', y='n', color='Pedra',
-        barmode='group',
-        color_discrete_map=PEDRA_COLORS,
-        category_orders={'Pedra': PEDRA_ORDER},
-        labels={'ano': 'Ano', 'n': 'Nº de alunos'},
-    )
-    fig_pa.update_layout(
-        **_layout(height=340),
-        xaxis=dict(tickvals=[2022, 2023, 2024]),
-        legend=dict(orientation='h', yanchor='bottom', y=-0.35),
-    )
-    st.plotly_chart(fig_pa, use_container_width=True)
 
 st.markdown("---")
 
@@ -369,53 +370,70 @@ _insight(
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 6. SCATTER — Engajamento × Desempenho
+# 6. SCATTER — Engajamento × Desempenho (2024 apenas)
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Engajamento × Desempenho acadêmico</p>', unsafe_allow_html=True)
-st.caption("Cada ponto é um aluno. As linhas marcam as medianas dos dois eixos, formando 4 quadrantes de intervenção.")
+st.markdown('<p class="section-hdr">Engajamento × Desempenho acadêmico — 2024</p>',
+            unsafe_allow_html=True)
+st.caption("Cada ponto é um aluno de 2024. As linhas marcam as medianas, formando 4 quadrantes de intervenção.")
 
-dff_sc = dff[dff['IEG'].notna() & dff['IDA'].notna() & dff['Pedra'].notna()].copy()
+dff_sc = df[df['ano'] == 2024].copy()
+dff_sc = dff_sc[dff_sc['IEG'].notna() & dff_sc['IDA'].notna() & dff_sc['Pedra'].notna()]
+
 if not dff_sc.empty:
     fig_sc = px.scatter(
         dff_sc, x='IEG', y='IDA', color='Pedra',
-        opacity=0.5,
+        opacity=0.55,
         color_discrete_map=PEDRA_COLORS,
         category_orders={'Pedra': PEDRA_ORDER},
         labels={'IEG': 'IEG — Engajamento', 'IDA': 'IDA — Desempenho Acadêmico'},
-        hover_data={'Fase': True, 'INDE': ':.2f', 'ano': True},
+        hover_data={'RA': True, 'Fase': True, 'INDE': ':.2f'},
+        custom_data=['RA', 'Fase', 'INDE', 'Pedra'],
     )
+    fig_sc.update_traces(
+        hovertemplate=(
+            "<b>RA %{customdata[0]}</b><br>"
+            "IEG: %{x:.1f} · IDA: %{y:.1f}<br>"
+            "INDE: %{customdata[2]:.2f} · Fase: %{customdata[1]}<br>"
+            "Pedra: %{customdata[3]}<extra></extra>"
+        )
+    )
+
     med_ieg, med_ida = dff_sc['IEG'].median(), dff_sc['IDA'].median()
     fig_sc.add_vline(x=med_ieg, line_dash='dot', line_color='#CBD5E1', line_width=1.5)
     fig_sc.add_hline(y=med_ida, line_dash='dot', line_color='#CBD5E1', line_width=1.5)
 
     _Q_LABELS = [
-        ("⚠️ Baixo engajamento<br>Baixo desempenho", 1.0,  1.0,  'left',  'bottom'),
-        ("📖 Engajado mas<br>com dificuldades",        1.0,  9.0,  'left',  'top'),
-        ("🌟 Alta performance",                        9.2,  9.0,  'right', 'top'),
-        ("🎯 Bom desempenho<br>pouco engajamento",     9.2,  1.0,  'right', 'bottom'),
+        ("⚠️ Baixo engajamento<br>Baixo desempenho", 0.3,  0.5,  'left',  'bottom'),
+        ("📖 Engajado mas<br>com dificuldades",        0.3,  9.7,  'left',  'top'),
+        ("🌟 Alta<br>performance",                     9.7,  9.7,  'right', 'top'),
+        ("🎯 Bom desempenho<br>pouco engajamento",     9.7,  0.5,  'right', 'bottom'),
     ]
     for txt, x, y, xanch, yanch in _Q_LABELS:
         fig_sc.add_annotation(
             x=x, y=y, text=txt, showarrow=False,
-            font=dict(size=9, color='#94A3B8'),
+            font=dict(size=10, color='#374151', family='sans-serif'),
+            bgcolor='rgba(255,255,255,0.82)',
+            bordercolor='#CBD5E1',
+            borderwidth=1,
+            borderpad=5,
             xanchor=xanch, yanchor=yanch,
         )
     fig_sc.update_layout(
-        **_layout(height=430),
-        xaxis=dict(range=[0, 10.5], gridcolor=_GRID),
-        yaxis=dict(range=[0, 10.5], gridcolor=_GRID),
+        **_layout(height=450),
+        xaxis=dict(range=[-0.2, 10.5], gridcolor=_GRID),
+        yaxis=dict(range=[-0.2, 10.5], gridcolor=_GRID),
         legend=dict(orientation='h', yanchor='bottom', y=-0.25),
     )
     st.plotly_chart(fig_sc, use_container_width=True)
 
-    n_baixo_tudo    = ((dff_sc['IEG'] < med_ieg) & (dff_sc['IDA'] < med_ida)).sum()
+    n_baixo_tudo     = ((dff_sc['IEG'] < med_ieg) & (dff_sc['IDA'] < med_ida)).sum()
     n_eng_sem_desemp = ((dff_sc['IEG'] >= med_ieg) & (dff_sc['IDA'] < med_ida)).sum()
     pct_baixo = n_baixo_tudo / len(dff_sc) * 100
     _insight(
-        f"<strong>{pct_baixo:.0f}% dos alunos</strong> estão abaixo da mediana nos dois eixos — "
-        f"prioridade máxima de intervenção multidimensional. "
+        f"<strong>{pct_baixo:.0f}% dos alunos de 2024</strong> estão abaixo da mediana nos dois eixos — "
+        "prioridade máxima de intervenção multidimensional. "
         f"Outros <strong>{n_eng_sem_desemp}</strong> alunos têm engajamento acima da mediana mas "
-        "desempenho abaixo: participam das atividades mas podem ter dificuldades específicas de aprendizado — "
+        "desempenho abaixo: participam mas podem ter dificuldades específicas de aprendizado — "
         "indicado para avaliação psicopedagógica (IPP)."
     )
 
@@ -551,15 +569,22 @@ if len(corr_cols) >= 2:
     )
     st.plotly_chart(fig_corr, use_container_width=True)
 
-    corr_no_diag = corr_m.copy()
-    np.fill_diagonal(corr_no_diag.values, 0)
-    pair = corr_no_diag.abs().unstack().idxmax()
+    # fill diagonal with 0 to find strongest off-diagonal pair
+    _arr = corr_m.to_numpy().copy()
+    np.fill_diagonal(_arr, 0)
+    corr_no_diag = pd.DataFrame(_arr, index=corr_m.index, columns=corr_m.columns)
+    pair  = corr_no_diag.abs().unstack().idxmax()
     r_val = corr_m.loc[pair[0], pair[1]]
-    inde_row = corr_m['INDE'].drop('INDE').abs().idxmax()
+    if 'INDE' in corr_m.columns:
+        inde_row = corr_m['INDE'].drop('INDE').abs().idxmax()
+        inde_insight = (
+            f" O indicador mais ligado ao INDE é o <strong>{inde_row}</strong> "
+            f"(r = {corr_m.loc['INDE', inde_row]:.2f})."
+        )
+    else:
+        inde_insight = ""
     _insight(
-        f"Par mais correlacionado: <strong>{pair[0]} × {pair[1]}</strong> (r = {r_val:.2f}). "
-        f"O indicador mais ligado ao INDE é o <strong>{inde_row}</strong> "
-        f"(r = {corr_m.loc['INDE', inde_row]:.2f}). "
+        f"Par mais correlacionado: <strong>{pair[0]} × {pair[1]}</strong> (r = {r_val:.2f}).{inde_insight} "
         "Indicadores com correlação baixa entre si precisam ser monitorados de forma independente — "
         "um aluno pode ter bom desempenho acadêmico e saúde psicossocial comprometida (e vice-versa)."
     )
