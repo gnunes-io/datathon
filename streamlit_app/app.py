@@ -21,29 +21,21 @@ if os.path.exists(LOGO_PATH):
 load_model()
 
 pg = st.navigation({
+    "": [
+        st.Page("_pages/home.py", title="Início", icon="🏠"),
+    ],
     "Ferramentas": [
-        st.Page("_pages/home.py",  title="Início",           icon="🏠"),
-        st.Page("_pages/radar.py", title="Radar de Risco",   icon="🎯"),
-        st.Page("_pages/eda.py",   title="Análise Rápida",   icon="📊"),
+        st.Page("_pages/radar.py", title="Radar de Risco",              icon="🎯"),
+        st.Page("_pages/bot.py",   title="Assistente Psicopedagógico",  icon="🤖"),
+        st.Page("_pages/eda.py",   title="Análise Rápida",              icon="📊"),
     ],
     "Apresentação": [
-        st.Page("_pages/apresentacao.py", title="Vídeo Apresentação", icon="🎬"),
-        st.Page("_pages/arquitetura.py",  title="Arquitetura",        icon="🏗️"),
-    ],
-    "Equipe": [
-        st.Page("_pages/staff.py", title="Staff PsicoNeuroPedagogia", icon="👥"),
+        st.Page("_pages/apresentacao.py", title="Vídeo",          icon="🎬"),
+        st.Page("_pages/arquitetura.py",  title="Arquitetura",    icon="🏗️"),
+        st.Page("_pages/pdf_exec.py",     title="PDF Executivo",  icon="📄"),
+        st.Page("_pages/github_page.py",  title="GitHub",         icon="🐙"),
+        st.Page("_pages/notebooks.py",    title="Notebooks",      icon="📓"),
     ],
 })
-
-# Links externos — aparecem abaixo da navegação na sidebar
-with st.sidebar:
-    st.markdown(
-        "<hr style='border-color:rgba(255,255,255,0.15); margin:0.5rem 0;'>",
-        unsafe_allow_html=True,
-    )
-    st.page_link("https://google.com", label="Assistente Pedagógico", icon="🤖")
-    st.page_link("https://google.com", label="Notebooks",             icon="📓")
-    st.page_link("https://google.com", label="GitHub",                icon="🐙")
-    st.page_link("https://google.com", label="PDF Executivo",         icon="📄")
 
 pg.run()
