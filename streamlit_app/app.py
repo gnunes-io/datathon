@@ -27,7 +27,7 @@ pg = st.navigation({
     "Ferramentas": [
         st.Page("_pages/radar.py", title="Radar de Risco",              icon="🎯"),
         st.Page("_pages/bot.py",   title="Assistente Psicopedagógico",  icon="🤖"),
-        st.Page("_pages/eda.py",   title="Análise Rápida",              icon="📊"),
+        st.Page("_pages/eda.py",   title="Quick Insights",              icon="📊"),
     ],
     "Apresentação": [
         st.Page("_pages/apresentacao.py", title="Vídeo",          icon="🎬"),
