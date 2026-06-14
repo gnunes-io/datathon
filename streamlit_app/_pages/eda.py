@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -181,13 +180,18 @@ for _, row in contagem.iterrows():
         sign = '+' if pct >= 0 else ''
         _labels.append(f"{int(row['Alunos'])}<br>({sign}{pct:.0f}% vs 2022)")
 
+_n = len(contagem)
+_textpos = ['top center'] * _n
+if _n >= 1: _textpos[0]  = 'top right'
+if _n >= 2: _textpos[-1] = 'top left'
+
 fig_cr = go.Figure(go.Scatter(
     x=contagem['ano'], y=contagem['Alunos'],
     mode='lines+markers+text',
     line=dict(color=PM_BLUE, width=3),
     marker=dict(size=12, color=PM_BLUE),
     text=_labels,
-    textposition='top center',
+    textposition=_textpos,
     textfont=dict(size=12, color=PM_BLUE),
     fill='tozeroy', fillcolor='rgba(0,48,135,0.07)',
     hovertemplate='%{x}: %{y} alunos<extra></extra>',
@@ -291,8 +295,9 @@ with tab_fase:
           .agg(['mean', 'sum', 'count'])
           .reset_index()
           .rename(columns={'mean': 'Taxa', 'sum': 'Risco', 'count': 'Total'}))
-    rf['Fase']   = rf['Fase'].astype(int)
-    rf['Taxa %'] = rf['Taxa'] * 100
+    rf['Fase']      = rf['Fase'].astype(int)
+    rf['Taxa %']    = rf['Taxa'] * 100
+    rf['FaseLabel'] = rf['Fase'].apply(lambda f: 'Alfa' if f == 0 else f'F{f}')
     rf = rf.sort_values('Taxa %', ascending=True)
 
     bar_colors_rf = [
@@ -301,24 +306,25 @@ with tab_fase:
     ]
     fig_rf = go.Figure(go.Bar(
         x=rf['Taxa %'],
-        y=rf['Fase'].astype(str),
+        y=rf['FaseLabel'],
         orientation='h',
         marker_color=bar_colors_rf,
         text=[f"{v:.0f}%  ({int(r)}/{int(t)})"
               for v, r, t in zip(rf['Taxa %'], rf['Risco'], rf['Total'])],
         textposition='outside',
-        hovertemplate='Fase %{y}: %{x:.1f}%<extra></extra>',
+        hovertemplate='%{y}: %{x:.1f}%<extra></extra>',
     ))
     fig_rf.update_layout(
-        **_layout(height=400, margin=dict(t=20, b=40, l=55)),
+        **_layout(height=420, margin=dict(t=20, b=40, l=65)),
         xaxis=dict(range=[0, rf['Taxa %'].max() * 1.35], title='Taxa de risco (%)'),
-        yaxis=dict(title='Fase', tickprefix='F'),
+        yaxis=dict(title='Fase'),
     )
     st.plotly_chart(fig_rf, use_container_width=True)
 
     top_f = rf.iloc[-1]
+    fase_nome = 'Alfa' if int(top_f['Fase']) == 0 else f"Fase {int(top_f['Fase'])}"
     _insight(
-        f"<strong>Fase {int(top_f['Fase'])}</strong> concentra a maior taxa de risco "
+        f"<strong>{fase_nome}</strong> concentra a maior taxa de risco "
         f"({top_f['Taxa %']:.0f}% — {int(top_f['Risco'])} de {int(top_f['Total'])} alunos). "
         "Fases iniciais tendem a ter maior risco por concentrar alunos em processo de nivelamento. "
         "Considere correlacionar com o volume total por fase ao priorizar intervenções."
@@ -354,7 +360,7 @@ fig_if.add_hrect(y0=5.5, y1=7.0, fillcolor='rgba(59,130,246,0.04)', line_width=0
 fig_if.update_traces(line_width=2.5, marker_size=9)
 fig_if.update_layout(
     **_layout(height=380),
-    xaxis=dict(tickvals=list(range(0, 10)), gridcolor=_GRID),
+    xaxis=dict(tickvals=list(range(0, 10)), range=[-0.3, 9.3], gridcolor=_GRID),
     yaxis=dict(range=[4, 8], title='INDE médio (zoom 4–8)', gridcolor=_GRID),
     legend=dict(orientation='h', yanchor='bottom', y=-0.3),
 )
@@ -402,11 +408,16 @@ if not dff_sc.empty:
     fig_sc.add_vline(x=med_ieg, line_dash='dot', line_color='#CBD5E1', line_width=1.5)
     fig_sc.add_hline(y=med_ida, line_dash='dot', line_color='#CBD5E1', line_width=1.5)
 
+    _nq1 = int(((dff_sc['IEG'] <  med_ieg) & (dff_sc['IDA'] <  med_ida)).sum())
+    _nq2 = int(((dff_sc['IEG'] <  med_ieg) & (dff_sc['IDA'] >= med_ida)).sum())
+    _nq3 = int(((dff_sc['IEG'] >= med_ieg) & (dff_sc['IDA'] >= med_ida)).sum())
+    _nq4 = int(((dff_sc['IEG'] >= med_ieg) & (dff_sc['IDA'] <  med_ida)).sum())
+
     _Q_LABELS = [
-        ("⚠️ Baixo engajamento<br>Baixo desempenho", 0.3,  0.5,  'left',  'bottom'),
-        ("📖 Engajado mas<br>com dificuldades",        0.3,  9.7,  'left',  'top'),
-        ("🌟 Alta<br>performance",                     9.7,  9.7,  'right', 'top'),
-        ("🎯 Bom desempenho<br>pouco engajamento",     9.7,  0.5,  'right', 'bottom'),
+        (f"⚠️ Baixo engajamento<br>Baixo desempenho<br><b>n = {_nq1}</b>", 0.3, 0.5, 'left', 'bottom'),
+        (f"📖 Engajado mas<br>com dificuldades<br><b>n = {_nq2}</b>",       0.3, 9.7, 'left', 'top'),
+        (f"🌟 Alta performance<br><b>n = {_nq3}</b>",                       9.7, 9.7, 'right', 'top'),
+        (f"🎯 Bom desempenho<br>pouco engajamento<br><b>n = {_nq4}</b>",    9.7, 0.5, 'right', 'bottom'),
     ]
     for txt, x, y, xanch, yanch in _Q_LABELS:
         fig_sc.add_annotation(
@@ -587,55 +598,6 @@ if len(corr_cols) >= 2:
         f"Par mais correlacionado: <strong>{pair[0]} × {pair[1]}</strong> (r = {r_val:.2f}).{inde_insight} "
         "Indicadores com correlação baixa entre si precisam ser monitorados de forma independente — "
         "um aluno pode ter bom desempenho acadêmico e saúde psicossocial comprometida (e vice-versa)."
-    )
-
-st.markdown("---")
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 10. BOX PLOTS — perfil em risco vs sem risco
-# ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Perfil comparativo — em risco vs sem risco</p>',
-            unsafe_allow_html=True)
-st.caption("Distribuição dos indicadores por grupo. A caixa mostra p25–p75; o traço é a mediana; × é a média.")
-
-box_cols = [c for c in ['IAN', 'IDA', 'IEG', 'IAA', 'INDE', 'IPV']
-            if dff[c].notna().sum() > 10]
-dff_box  = dff[dff['target'].notna()].copy()
-dff_box['Grupo'] = dff_box['target'].map({0.0: 'Sem risco', 1.0: 'Em risco'})
-
-if not dff_box.empty and box_cols:
-    fig_box = make_subplots(rows=1, cols=len(box_cols),
-                            subplot_titles=box_cols, shared_yaxes=True)
-    for i, col in enumerate(box_cols, start=1):
-        for grupo, cor in [('Sem risco', RISK_LOW), ('Em risco', RISK_HIGH)]:
-            vals = dff_box[dff_box['Grupo'] == grupo][col].dropna()
-            fig_box.add_trace(
-                go.Box(y=vals.values, name=grupo, marker_color=cor,
-                       showlegend=(i == 1), legendgroup=grupo,
-                       boxmean='sd',
-                       hovertemplate=f"{col}<br>%{{y:.1f}}<extra>{grupo}</extra>"),
-                row=1, col=i,
-            )
-    fig_box.update_layout(
-        height=390, paper_bgcolor='#F8FAFC', plot_bgcolor='white',
-        boxmode='group',
-        legend=dict(orientation='h', yanchor='bottom', y=-0.25),
-        margin=dict(t=30, b=60),
-        yaxis=dict(range=[0, 10]),
-    )
-    st.plotly_chart(fig_box, use_container_width=True)
-
-    seps = {}
-    for col in box_cols:
-        mr = dff_box[dff_box['Grupo'] == 'Em risco'][col].median()
-        ms = dff_box[dff_box['Grupo'] == 'Sem risco'][col].median()
-        seps[col] = abs(mr - ms)
-    best = max(seps, key=seps.get)
-    _insight(
-        f"<strong>{best}</strong> é o indicador com maior separação entre os grupos "
-        f"(diferença de mediana: {seps[best]:.2f} pontos). "
-        "Quanto maior a separação entre as caixas, mais o indicador discrimina risco de segurança — "
-        "esses são os sinais mais confiáveis para triagem precoce."
     )
 
 st.markdown(
