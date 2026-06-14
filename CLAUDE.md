@@ -3,13 +3,13 @@
 ## Visão Geral
 
 Projeto de datathon acadêmico desenvolvido para a ONG **Passos Mágicos** (Embu-Guaçu, SP).
-Objetivo: identificar precocemente alunos em risco de **defasagem escolar** (≥ 1 ano) usando
-os indicadores coletados pela ONG nos anos 2022–2024.
+Objetivo: identificar precocemente alunos em risco de **defasagem escolar** usando os
+indicadores coletados pela ONG nos anos 2022–2024.
 
 Quatro entregáveis:
 1. `eda/` — Análise Exploratória de Dados (12 perguntas)
 2. `model/` — Modelo preditivo binário exportado como `.pkl`
-3. `streamlit_app/` — App de apoio à decisão para pedagogos
+3. `streamlit_app/` — App de apoio à decisão para pedagogos ("🌟Passos Mágicos - Tech Hub")
 4. `bot/` — Chat com 3 personas (Guia do Aluno / Painel do Gestor / Radar de Risco)
 
 ---
@@ -19,23 +19,73 @@ Quatro entregáveis:
 ```
 .
 ├── data/
-│   ├── DATATHON - 2022.csv      # encoding=latin1, ~860 alunos
-│   ├── DATATHON - 2023.csv      # encoding=latin1, ~1.014 alunos
-│   └── DATATHON - 2024.csv      # encoding=latin1, ~1.156 alunos
+│   ├── DATATHON - 2022.csv          # encoding=latin1, ~860 alunos
+│   ├── DATATHON - 2023.csv          # encoding=latin1, ~1.014 alunos
+│   └── DATATHON - 2024.csv          # encoding=latin1, ~1.156 alunos
 ├── eda/
-│   └── EDA_PassosMagicos.ipynb  # 44 células, 12 perguntas + cohort + completude
+│   └── EDA_PassosMagicos.ipynb
 ├── model/
-│   ├── modelo_preditivo.ipynb   # 25 células — treina e exporta o modelo
+│   ├── modelo_preditivo.ipynb
 │   └── modelo_risco_defasagem.pkl
 ├── streamlit_app/
-│   ├── app.py
-│   └── requirements.txt
+│   ├── app.py                       # entry point — st.navigation() com seções
+│   ├── utils.py                     # load_model, build_features, predict, risk_level, GLOBAL_CSS
+│   ├── requirements.txt
+│   ├── .streamlit/
+│   │   └── config.toml              # tema PM (light, PM_BLUE sidebar via CSS)
+│   └── _pages/                      # prefixo _ desativa auto-detecção do Streamlit
+│       ├── home.py
+│       ├── radar.py
+│       ├── eda.py
+│       ├── apresentacao.py          # placeholder
+│       ├── arquitetura.py           # placeholder
+│       └── staff.py                 # placeholder (CRUD futuro)
 └── bot/
-    ├── index.html               # SPA com Tailwind — 3 personas
-    ├── api/chat.js              # Vercel Serverless Function → OpenAI
+    ├── index.html
+    ├── api/chat.js
     ├── vercel.json
     └── package.json
 ```
+
+---
+
+## Relatório de Atividades 2025 — Contexto do Cliente
+
+Arquivo: `relatorio_de_atividades_2025.pdf` (74 páginas, na raiz do projeto).
+
+**Números-chave 2025:**
+- 1.200 aprendizes atendidos · 4 unidades em Embu-Guaçu · 63 colaboradores
+- 120 crianças alfabetizadas fora da idade esperada
+- 119 universitários cursando ou formados (65 cursando + 54 formados)
+- 87 no mercado de trabalho · salário médio R$ 2.772
+- 14.000+ horas de oficinas no PAC · 7.570 livros lidos
+- Receita ~R$ 8,8M (doações PF 30,3%, FUMCAD 26,7%, Rouanet 10,3%)
+- 40% dos formados proficientes em inglês (vs 5% da população brasileira no nível B1)
+
+**Programas de Psicologia por fase (crítico para o app e o bot):**
+| Fase | Programa |
+|------|----------|
+| Alfa | Heróis da Educação |
+| 1    | Guardiões do Saber |
+| 2    | Sabedoria em Ação |
+| 3    | Exploradores do Saber |
+| 4    | Jornada das Emoções |
+| 5    | Quebrando Barreiras |
+| 6    | SuperAção |
+| 7    | Eu no Comando |
+| 8    | Ponto de Virada |
+| 9    | Conectando Passos |
+| 10   | Passos em Carreiras |
+| Pais | Passos em Família (56 encontros/ano) |
+
+**Outros programas relevantes para recomendações:**
+- IAN baixo → **Construindo Sonhos** (reforço Português + Matemática + simulados)
+- IEG baixo → **Passos na Sua Casa** (visita domiciliar) + **Café em Família**
+- IPS/contexto social → **Serviço Social**: entrevistas, cestas básicas, Mães no Mercado
+- Inglês → **Speed Up** (voluntários internacionais, +40% proficiência) + **Canada Experience** (7/ano)
+- Tecnologia → **Sala Cibernética** (F3-F4) + **Jovens Inventores** (robótica LEGO — premiado Poliedro 2025)
+- Vestibular → **Vem Ser** (Me Salva!) — 30 aprovados em 2025
+- Moradia em SP → **Casa Mágica** (31 aprendizes, 5 apartamentos, custeio integral)
 
 ---
 
@@ -54,61 +104,88 @@ Escala 0–10 para todos os indicadores:
 | IPV | Ponto de Virada | 2022–2024 |
 | INDE | Índice de Desenvolvimento Educacional (síntese) | 2022–2024 |
 
-**Pedras classificatórias** (baseadas no INDE):
-- Quartzo: INDE < 5.5
-- Ágata: 5.5 ≤ INDE < 7.0
-- Ametista: 7.0 ≤ INDE < 8.5
-- Topázio: INDE ≥ 8.5
+**Fases do PAC:** Alfa (alfabetização, mapeada para 0 numericamente) + Fases 1–9 nos dados 2022–2024.
+O relatório 2025 introduz Fase 10 (15 aprendizes), ainda fora do treino do modelo.
+O formulário do app expõe todas as opções: Alfa (0), 1, 2, … 9.
 
-**Target do modelo:** `Defasagem >= 1` (binário) — aluno cursando fase ≥ 1 ano abaixo do esperado.
+**Pedras classificatórias** (derivadas automaticamente do INDE — não são input do usuário):
+- Quartzo: INDE < 5,5
+- Ágata: 5,5 ≤ INDE < 7,0
+- Ametista: 7,0 ≤ INDE < 8,5
+- Topázio: INDE ≥ 8,5
 
 **Quirks dos CSVs:**
-- Encoding `latin1` — sempre usar `pd.read_csv(..., encoding='latin1')`
-- Decimais com vírgula — usar `str.replace(',', '.')` antes de `float()`
-- Colunas com sufixo de ano: `INDE 2022`, `Pedra 2023`, etc. — buscar com `[c for c in df.columns if 'INDE' in c]`
-- IPP ausente em 2022 — forçar `df22['IPP'] = np.nan`
-- Coluna de gênero pode ter grafias distintas: `'F'`, `'M'`, `'Feminino'`, `'Masculino'`
+- Encoding `latin1` — sempre `pd.read_csv(..., encoding='latin1')`
+- Decimais com vírgula — `str.replace(',', '.')` antes de `float()`
+- 2022 usa sufixo curto: `'INDE 22'`, `'Pedra 22'` (não `'INDE 2022'`) — usar `find_col()` helper
+- Fase em 2023 é texto `'FASE 2'`, `'ALFA'`; em 2024 é `'7E'`, `'4M'` — usar `parse_fase()` regex
+- IPP ausente em 2022 — imputado pela mediana histórica do treino
+- Gênero tem grafias mistas: `'F'`/`'M'` em 2022, `'Feminino'`/`'Masculino'` em 2023–2024
 
 ---
 
 ## Modelo Preditivo
 
-**Split temporal (não aleatório):**
-- Treino: 2022 + 2023 (1.874 registros, 2.9% positivos)
-- Teste: 2024 (1.156 registros, 11.9% positivos)
-- O shift de distribuição 2.9% → 11.9% é documentado — o `scale_pos_weight` do XGBoost foi calibrado para o treino.
+**Target composto (decisão definitiva):**
+```python
+target = (Defasagem >= 1) | (INDE < 5.5)
+```
+Captura tanto defasagem formal (aluno cursando fase abaixo da esperada para a idade)
+quanto Quartzo (pior faixa de desenvolvimento — INDE < 5,5).
 
-**Algoritmos:** Random Forest + XGBoost (compara ambos, usa o melhor por AUC-ROC)
+**Treinamento — todos os 3 anos com validação cruzada OOF:**
+- Dados: 2022 + 2023 + 2024 (~3.030 registros após limpeza)
+- Validação: 5-fold Stratified K-Fold (OOF — sem leakage)
+- Threshold calibrado nas predições OOF por Fbeta (β=2)
 
-**Métricas reais (conjunto de teste 2024):**
-- Random Forest AUC-ROC: 0.759
-- XGBoost AUC-ROC: 0.737
+**Algoritmo final:** Random Forest (XGBoost descartado — probabilidades OOF divergem do modelo
+final treinado em todos os dados quando `scale_pos_weight` é usado)
 
-**Threshold:** calibrado por **Fbeta (β=2)** — penaliza falso negativo 2× mais que falso positivo, adequado para triagem educacional.
+**Métricas (pkl atual):**
+- AUC-ROC OOF: **0.9695**
+- Threshold Fbeta β=2: **0.61**
+- Positivos no treino: ~30% (target composto)
 
-**Features (18 total):**
+**Features (18 declaradas, 17 efetivas):**
 - 9 diretas: IAN, IDA, IEG, IAA, IPS, IPP, IPV, INDE, Fase
-- 9 derivadas: `ind_academico_medio`, `ind_psico_medio`, `gap_ian_fase`, `inde_x_ian`, `baixo_ida`, `baixo_ieg`, `fase_sq`, `genero_cod`, `pedra_ord`
+- 9 derivadas: `ind_academico_medio`, `ind_psico_medio`, `gap_ian_fase`, `inde_x_ian`,
+  `baixo_ida`, `baixo_ieg`, `fase_sq`, `genero_cod`, `pedra_ord`
+- **`genero_cod` é sempre NaN** (gênero inconsistente nos CSVs) → sklearn 1.6+ SimpleImputer
+  dropa a coluna → pipeline efetivamente opera com 17 features
+
+**Importância das features (RF, ordem decrescente):**
+INDE (15,2%) · inde_x_ian (13,9%) · gap_ian_fase (12,8%) · Fase (12,2%) · fase_sq (9,7%)
+· ind_academico_medio (8,8%) · IAN (7,8%) · pedra_ord (4,9%) · IEG (4,3%) · IPV (2,2%)
+· IDA (2,0%) · ind_psico_medio (1,6%) · IPP (1,2%) · IAA (0,8%) · IPS (0,6%)
 
 **Payload exportado no `.pkl`:**
 ```python
 {
-    'pipeline':     Pipeline(imputer + model),
-    'feature_cols': [...],   # lista exata de 18 features na ordem certa
-    'threshold':    float,   # threshold ótimo Fbeta β=2
-    'model_name':   str,
-    'auc_roc':      float,
-    'ref_means':    dict,    # médias reais do treino para IAN/IDA/IEG/IAA/IPS/IPV/INDE
-    'train_years':  [2022, 2023],
-    'test_year':    2024
+    'pipeline':       Pipeline([('imputer', SimpleImputer), ('model', RandomForestClassifier)]),
+    'feature_cols':   [...],      # 18 nomes (inclui genero_cod)
+    'threshold':      0.61,       # Fbeta β=2 OOF
+    'model_name':     'Random Forest',
+    'auc_roc':        0.9695,     # OOF
+    'ref_means':      dict,       # médias do treino: IAN/IDA/IEG/IAA/IPS/IPV/INDE
+    'shap_explainer': TreeExplainer,
+    'train_years':    [2022, 2023, 2024],
+    'val_year':       None,
+    'test_year':      None,
 }
 ```
 
-**Patch de compatibilidade sklearn** (aplicado no carregamento do pkl):
+**Compatibilidade sklearn:**
 ```python
+# Patch para versões antigas sem _fill_dtype
 for _, step in payload['pipeline'].steps:
     if hasattr(step, 'statistics_') and not hasattr(step, '_fill_dtype'):
         step._fill_dtype = step.statistics_.dtype
+
+# SHAP: usar valid_mask para mapear 17 colunas efetivas
+imp = pipeline.named_steps['imputer']
+valid_mask = ~np.isnan(imp.statistics_)
+valid_cols = [c for c, v in zip(feature_cols, valid_mask) if v]
+# SHAP retorna (1, 17, 2) — normalizar para (17,) e indexar com valid_cols
 ```
 
 ---
@@ -122,52 +199,101 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-O app procura o modelo em `../model/modelo_risco_defasagem.pkl`. Gere o pkl executando o notebook `model/modelo_preditivo.ipynb` antes de rodar o app.
+O app procura o modelo em `../model/modelo_risco_defasagem.pkl`.
 
-**3 abas:**
-- **Avaliação Individual:** sliders para todos os 8 indicadores + Fase + Gênero + Pedra → probabilidade de risco + radar de 7 indicadores (IAN, IDA, IEG, IAA, IPS, IPV, INDE) + recomendações acionáveis
-- **Comparação de Perfis:** até 3 alunos lado a lado com IPP e Pedra editáveis
-- **Como Funciona:** documentação do modelo com threshold e zonas de risco
+**Navegação — 3 seções na sidebar + links externos:**
+```
+Ferramentas:     🏠 Início · 🎯 Radar de Risco · 📊 Análise Rápida
+Apresentação:    🎬 Vídeo Apresentação · 🏗️ Arquitetura
+Equipe:          👥 Staff PsicoNeuroPedagogia
 
-**Médias de referência:** carregadas do `ref_means` no pkl (calculadas do treino real). Se o pkl for antigo e não contiver `ref_means`, usa fallback hardcoded.
+Links externos (placeholder google.com):
+🤖 Assistente Pedagógico · 📓 Notebooks · 🐙 GitHub · 📄 PDF Executivo
+```
+
+**Por que `_pages/` e não `pages/`:**
+A pasta `pages/` ativa a detecção automática legada do Streamlit, que ignora o `st.navigation()`
+e exibe nomes de arquivo crus na sidebar. O prefixo `_` desativa esse comportamento.
 
 **Zonas de risco:**
-- Baixo: `prob < threshold`
-- Médio: `threshold ≤ prob < threshold + 0.15`
-- Alto: `prob ≥ threshold + 0.15`
+- 🟢 Baixo: `prob < 0.40`
+- 🟠 Médio: `0.40 ≤ prob < threshold (0.61)`
+- 🔴 Alto: `prob ≥ threshold`
+
+**Fatores de atenção — prioridade por importância do modelo:**
+```
+Prioridade: INDE → IAN → IEG → IDA → IPV → IPP → IAA → IPS
+Crítico (🔴): val < 5.0  → ação (_IND_ACTIONS) + programa da fase (_action_for_fase)
+Atenção (🟡): 5.0 ≤ val < ref_mean → programa da fase se aplicável
+Positivo (✅): val ≥ ref_mean
+```
+`_action_for_fase(ind, fase)` retorna o programa PM específico da fase para IAA/IPS/IPV/IPP
+(ex.: Fase 4 + IAA baixo → "Jornada das Emoções"). Para IDA fase ≥ 8 sugere Vem Ser.
+
+**Formulário — o que NÃO é coletado do usuário:**
+- Nome/ID (não é feature)
+- Gênero (sempre NaN no treino, 0% importância)
+- Pedra (derivada automaticamente do INDE — `inde_to_pedra()` em radar.py)
+
+**Staff page** (`_pages/staff.py`): populada com equipe real do Relatório 2025.
+Seções: Fundadores · Coordenação Pedagógica · Psicologia · Psicopedagogia ·
+Neuropsicopedagogia · Assistência Social · Equipe Pedagógica (tabs por disciplina).
+
+**Home page** (`_pages/home.py`): seção de impacto com 6 métricas reais (1.200 aprendizes,
+4 unidades, 119 universitários, 87 no mercado, 120 alfabetizados, +14.000h PAC) +
+jornada do aprendiz visualizada em 6 etapas.
+
+**SHAP — gotcha sklearn 1.6+:**
+`genero_cod` all-NaN → imputer dropa a coluna → `X_imp` shape `(1, 17)` →
+SHAP retorna `(1, 17, 2)`. Usar `valid_cols` (17 features não-NaN) para indexar o Series,
+não `feature_cols` (18). Chamar com `check_additivity=False`.
 
 ---
 
 ## Bot de Chat
 
-Hospedado via **Vercel** (Serverless Functions). Requer variável de ambiente `OPENAI_API_KEY` configurada no painel da Vercel.
+Hospedado via **Vercel** (Serverless Functions). Requer `OPENAI_API_KEY` no painel da Vercel.
 
-**3 personas / modos:**
-- `guia` — linguagem acolhedora para alunos, temperature 0.7
-- `gestor` — analítico para gestores, temperature 0.7
-- `radar` — alertas de risco, temperature 0.3 (mais determinístico)
+**3 personas:** `guia` (alunos, temp 0.7) · `gestor` (analítico, temp 0.7) · `radar` (alertas, temp 0.3)
 
-**Fallback offline:** implementado em JS no `index.html` — o bot responde com heurísticas estáticas quando a API não está disponível (útil para demos sem backend).
+**Fallback offline:** heurísticas estáticas em JS quando API indisponível.
 
-**LGPD:** dados de indicadores de alunos enviados para a API da OpenAI. Em uso real, exige DPA com a OpenAI ou processamento local. O bot **não** coleta nomes — apenas indicadores numéricos.
+**LGPD:** indicadores numéricos enviados à OpenAI. Em produção, exige DPA ou processamento local.
 
 ---
 
 ## Decisões Técnicas Relevantes
 
-- **Por que Fbeta (β=2) e não max-F1?** Em triagem educacional, deixar de identificar um aluno em risco (falso negativo) é mais custoso do que acionar a equipe desnecessariamente (falso positivo). β=2 reflete isso.
-- **Por que split temporal?** O modelo é treinado no passado e usado para prever o futuro. Split aleatório vazaria informação temporal.
-- **Por que `ref_means` no pkl?** O app precisa de médias reais do treino para comparação. Hardcodar no app desacoplaria o app do modelo — qualquer retrain mudaria as médias sem atualizar o app.
-- **XGBoost pode descartar features** com zero variância após imputação (e.g. `genero_cod` se ausente no treino). O código de importância de features usa `get_booster().get_score()` com mapeamento `f{i}` → nome real para lidar com isso.
+- **Target composto** `(Defasagem ≥ 1) | (INDE < 5,5)`: o target original (`Defasagem ≥ 1`)
+  captura apenas defasagem formal de série, que é dominada por alunos com IAN=10 em Fase 9.
+  O modelo não respondia a variações de indicadores acadêmicos. O INDE < 5,5 (Quartzo) foi
+  adicionado para capturar risco real de aprendizado.
+
+- **Random Forest sobre XGBoost:** o `scale_pos_weight` do XGBoost causa divergência entre
+  as probabilidades OOF e as probabilidades do modelo final treinado em todos os dados.
+  O threshold calibrado no OOF não se transfere. RF tem probabilidades naturalmente calibradas.
+
+- **Todos os 3 anos no treino + OOF:** sem conjunto de teste separado — o modelo usa todos os
+  dados disponíveis. A validade é estimada pelas predições OOF (cada sample foi predita por
+  um fold no qual não participou do treino).
+
+- **Fbeta (β=2):** falso negativo (deixar de identificar aluno em risco) custa 2× mais que
+  falso positivo (acionamento desnecessário) — adequado para triagem educacional.
+
+- **`ref_means` no pkl:** médias reais do treino para comparação no app. Hardcodar no app
+  desacoplaria as médias do modelo — qualquer retrain mudaria as referências sem atualizar o app.
+
+- **Pedra derivada do INDE no app:** usuário não seleciona pedra — ela é calculada em tempo real
+  a partir do INDE inserido. Evita inconsistência (usuário informar Topázio com INDE=4,0).
 
 ---
 
 ## Como Regenerar o Modelo
 
 ```
-1. Execute eda/EDA_PassosMagicos.ipynb  (análise, não obrigatório para o modelo)
-2. Execute model/modelo_preditivo.ipynb  (gera model/modelo_risco_defasagem.pkl)
-3. streamlit run streamlit_app/app.py   (carrega o pkl automaticamente)
+1. Execute model/modelo_preditivo.ipynb  (gera model/modelo_risco_defasagem.pkl)
+2. Reinicie o Streamlit: Ctrl+C → streamlit run app.py
+   (@st.cache_resource mantém o pkl antigo até reiniciar o servidor)
 ```
 
 ---
@@ -176,10 +302,11 @@ Hospedado via **Vercel** (Serverless Functions). Requer variável de ambiente `O
 
 | Pacote | Versão mínima | Uso |
 |--------|---------------|-----|
-| streamlit | 1.45.0 | App web |
-| scikit-learn | 1.5.0 | Pipeline, imputer, RF |
-| xgboost | 2.0.0 | Modelo principal |
+| streamlit | 1.45.0 | App web + st.navigation() |
+| scikit-learn | 1.5.0 | Pipeline, SimpleImputer, RandomForest |
+| xgboost | 2.0.0 | Comparação no notebook |
+| shap | 0.44.0 | TreeExplainer para explicabilidade por aluno |
 | pandas | 2.2.3 | Manipulação de dados |
 | numpy | 2.2.5 | Cálculos numéricos |
 | joblib | 1.3.0 | Serialização do pkl |
-| matplotlib | 3.7.0 | Radar, gráficos do app |
+| plotly | 5.18.0 | Radar chart + SHAP bar chart |

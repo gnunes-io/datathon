@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from utils import GLOBAL_CSS, LOGO_PATH, load_model
 
 st.set_page_config(
-    page_title="🌟Passos Mágicos - Tech Hub",
+    page_title="Passos Mágicos - Tech Hub",
     page_icon="🌟",
     layout="wide",
     initial_sidebar_state="expanded",

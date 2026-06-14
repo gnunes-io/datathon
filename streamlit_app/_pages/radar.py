@@ -61,7 +61,11 @@ form_col, result_col = st.columns([1.1, 0.9], gap="large")
 with form_col:
     # Identificação — só Fase
     st.markdown('<p class="section-hdr">Identificação</p>', unsafe_allow_html=True)
-    fase = st.selectbox("Fase escolar", list(range(1, 9)), index=2, key="fase")
+    _FASE_OPTS = ['Alfa (0)', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    _FASE_VALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    fase_sel = st.selectbox("Fase escolar", _FASE_OPTS, index=3, key="fase",
+                            help="Alfa = fase de alfabetização (antes da Fase 1)")
+    fase = _FASE_VALS[_FASE_OPTS.index(fase_sel)]
 
     # Indicadores Acadêmicos
     st.markdown('<p class="section-hdr">Indicadores Acadêmicos</p>', unsafe_allow_html=True)
@@ -322,16 +326,40 @@ _IND_VALUES = {
     'IPS': ips, 'IPP': ipp, 'IPV': ipv, 'INDE': inde,
 }
 
+# Ações críticas por indicador (referenciando programas reais da ONG)
 _IND_ACTIONS = {
-    'INDE': "Indicador geral comprometido — priorizar intervenção multidimensional",
-    'IAN':  "Reforço pedagógico para nivelação de fase",
-    'IDA':  "Apoio em Matemática e Português",
-    'IEG':  "Investigar causas de baixa participação",
-    'IAA':  "Encaminhar para acompanhamento psicológico",
-    'IPS':  "Agendar avaliação com equipe de psicologia",
-    'IPP':  "Investigar dificuldades específicas de aprendizado",
-    'IPV':  "Reforçar motivação e perspectiva de futuro com o aluno",
+    'INDE': "Acionar coordenação pedagógica e equipe multiprofissional para plano de suporte integrado",
+    'IAN':  "Programa **Construindo Sonhos** — reforço intensivo de Português e Matemática para nivelamento",
+    'IDA':  "Atividades lúdicas de Matemática (fins de semana com voluntários) · **Speed Up** de Inglês se aplicável",
+    'IEG':  "**Passos na Sua Casa** (visita domiciliar) · **Café em Família** — investigar contexto sociofamiliar",
+    'IAA':  "Encaminhar ao programa de Psicologia da fase · **Exploradores do Saber** (F3) · **Jornada das Emoções** (F4)",
+    'IPS':  "Serviço Social — agendar entrevista social · **Passos em Família** (56 encontros/ano disponíveis)",
+    'IPP':  "Psicopedagogia: **Heróis da Educação** (Alfa) · **Guardiões do Saber** (F1) · **Sabedoria em Ação** (F2)",
+    'IPV':  "Psicologia: **Ponto de Virada** (F8) · **Eu no Comando** (F7) · reforçar perspectiva de futuro e carreira",
 }
+
+# Complemento de ação por fase para indicadores críticos
+def _action_for_fase(ind: str, fase: int) -> str:
+    """Retorna programa específico PM para o indicador e fase do aluno."""
+    _PSICO_BY_FASE = {
+        0: "Heróis da Educação",
+        1: "Guardiões do Saber",
+        2: "Sabedoria em Ação",
+        3: "Exploradores do Saber",
+        4: "Jornada das Emoções",
+        5: "Quebrando Barreiras",
+        6: "SuperAção",
+        7: "Eu no Comando",
+        8: "Ponto de Virada",
+        9: "Conectando Passos / Passos em Carreiras",
+    }
+    if ind in ('IAA', 'IPS', 'IPV', 'IPP') and fase in _PSICO_BY_FASE:
+        return f"Programa desta fase: **{_PSICO_BY_FASE[fase]}**"
+    if ind == 'IDA' and fase >= 8:
+        return "Programa **Vem Ser** (preparação vestibular) se aplicável"
+    if ind == 'IAN':
+        return "Avaliar adequação de fase · **Construindo Sonhos** para nivelamento"
+    return ""
 
 _IND_LABELS_PT = {
     'INDE': 'INDE — Índice Geral',
@@ -366,15 +394,20 @@ with rec_col:
         st.success("✅ Todos os indicadores acima da média histórica")
     else:
         for ind, val, ref in criticos:
-            st.markdown(
-                f"🔴 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(crítico)*"
-            )
+            st.markdown(f"🔴 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(crítico < 5,0)*")
             st.caption(_IND_ACTIONS[ind])
+            extra = _action_for_fase(ind, fase)
+            if extra:
+                st.caption(extra)
         for ind, val, ref in atencoes:
             st.markdown(
                 f"🟡 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(abaixo da média {ref:.1f})*"
             )
-            st.caption("Monitorar evolução no próximo ciclo")
+            extra = _action_for_fase(ind, fase)
+            if extra:
+                st.caption(extra)
+            else:
+                st.caption("Monitorar evolução no próximo ciclo")
 
 with pos_col:
     st.markdown("**✅ Pontos positivos**")
