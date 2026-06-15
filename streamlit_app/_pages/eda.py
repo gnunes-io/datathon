@@ -342,12 +342,14 @@ st.markdown("---")
 # 5. INDE MÉDIO POR FASE — escala 4–8
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">INDE médio por fase escolar</p>', unsafe_allow_html=True)
+st.caption("Fases 8 e 9 não possuem INDE registrado nos dados 2022–2024 — alunos existem mas o campo está em branco na fonte.")
 
 inde_fase = (dff[dff['INDE'].notna() & dff['Fase'].notna()]
              .groupby(['Fase', 'ano'])['INDE']
              .mean().reset_index())
 inde_fase['Fase'] = inde_fase['Fase'].astype(int)
 inde_fase['Ano']  = inde_fase['ano'].astype(str)
+_fases_com_dado = sorted(inde_fase['Fase'].unique().tolist())
 
 fig_if = px.line(
     inde_fase, x='Fase', y='INDE', color='Ano',
@@ -368,7 +370,7 @@ fig_if.add_hrect(y0=7.0, y1=8.0, fillcolor='rgba(139,92,246,0.04)', line_width=0
 fig_if.update_traces(line_width=2.5, marker_size=9)
 fig_if.update_layout(
     **_layout(height=380),
-    xaxis=dict(tickvals=list(range(0, 10)), range=[-0.3, 9.3], gridcolor=_GRID),
+    xaxis=dict(tickvals=_fases_com_dado, gridcolor=_GRID),
     yaxis=dict(range=[4, 8], title='INDE médio (zoom 4–8)', gridcolor=_GRID),
     legend=dict(orientation='h', yanchor='bottom', y=-0.3),
 )
