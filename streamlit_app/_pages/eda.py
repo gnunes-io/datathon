@@ -197,9 +197,10 @@ fig_cr = go.Figure(go.Scatter(
     hovertemplate='%{x}: %{y} alunos<extra></extra>',
 ))
 fig_cr.update_layout(
-    **_layout(height=340, margin=dict(t=85, b=40, l=60, r=90)),
+    **_layout(height=340, margin=dict(t=20, b=40, l=60, r=40)),
     xaxis=dict(tickvals=[2022, 2023, 2024], gridcolor=_GRID, title='Ano'),
-    yaxis=dict(title='Nº de alunos', gridcolor=_GRID, rangemode='tozero'),
+    yaxis=dict(title='Nº de alunos', gridcolor=_GRID,
+               range=[0, contagem['Alunos'].max() * 1.35]),
 )
 st.plotly_chart(fig_cr, use_container_width=True)
 
