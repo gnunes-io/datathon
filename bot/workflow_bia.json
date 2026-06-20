@@ -21,7 +21,6 @@
         "width": 700,
         "color": 4
       },
-      "n8n-webhook-url":{
       "id": "sticky-002-ia",
       "name": "Sticky Note — IA",
       "type": "n8n-nodes-base.stickyNote",
