@@ -40,11 +40,14 @@ Quatro entregáveis:
 │       ├── apresentacao.py          # placeholder
 │       ├── arquitetura.py           # placeholder
 │       └── staff.py                 # placeholder (CRUD futuro)
+├── relatorio_atividades_2025_bia.md   # contexto 2025 curado para RAG da Bia
+├── codigo_etica_conduta.md            # código de ética limpo para RAG da Bia
 └── bot/
-    ├── index.html
-    ├── api/chat.js
-    ├── vercel.json
-    └── package.json
+    ├── index.html                     # frontend da Bia (sem secrets — proxy via /api/chat)
+    ├── api/chat.js                    # Vercel serverless: proxy seguro para n8n
+    ├── vercel.json                    # outputDirectory: "." (zero-config)
+    ├── package.json                   # node 24.x, sem dependências
+    └── workflow_bia.json              # workflow n8n exportado (importar no n8n)
 ```
 
 ---
@@ -250,15 +253,105 @@ não `feature_cols` (18). Chamar com `check_additivity=False`.
 
 ---
 
-## Bot de Chat
+## Bot de Chat — Bia (Psicopedagoga Virtual)
 
-Hospedado via **Vercel** (Serverless Functions). Requer `OPENAI_API_KEY` no painel da Vercel.
+O bot evoluiu de "3 personas" para a **Bia**, assistente psicopedagógica única focada em alunos.
 
-**3 personas:** `guia` (alunos, temp 0.7) · `gestor` (analítico, temp 0.7) · `radar` (alertas, temp 0.3)
+### Arquitetura
 
-**Fallback offline:** heurísticas estáticas em JS quando API indisponível.
+```
+[index.html] → POST /api/chat → [api/chat.js Vercel] → n8n webhook /bia
+                                       ↑
+                              N8N_WEBHOOK_URL + WEBHOOK_SECRET
+                              (env vars Vercel — NUNCA no frontend)
+```
 
-**LGPD:** indicadores numéricos enviados à OpenAI. Em produção, exige DPA ou processamento local.
+**n8n workflow** (`workflow_bia.json`):
+```
+Receber Mensagem (webhook POST /bia, header auth)
+  → Preparar Dados (extrair message + sessionId)
+  → Bia Psicopedagoga (AI Agent GPT-4o-mini)
+      ├── Memória Redis (sessionKey = sessionId, janela 20 msgs)
+      ├── BuscarAluno (Supabase tool — tabela alunos, filtro ra = RA-XXXX)
+      └── ConhecimentosPM (Vector Store tool → Pinecone passosmagicos)
+            ├── GPT-4o-mini RAG (LLM do retriever)
+            ├── Pinecone PM (index passosmagicos)
+            └── Embeddings PM (text-embedding-3-small)
+  → Resposta OK (respondToWebhook com JSON { reply })
+```
+
+**Workflow de ingestão RAG** (mesmo arquivo, seção separada):
+```
+Manual Trigger → Google Drive (download .md) → Insert Pinecone
+  Sub-nodes: Embeddings OpenAI1 (text-embedding-3-small)
+             Default Data Loader (binary)
+             Recursive Character Text Splitter (chunk 1000, overlap 150)
+```
+
+### Credenciais n8n necessárias
+| Credencial | Uso |
+|---|---|
+| OpenAI API Key | GPT-4o-mini (agente) + GPT-4o-mini RAG + Embeddings |
+| Redis | Memória de conversa por sessionId |
+| Supabase URL + Service Key | BuscarAluno (tabela `alunos`) |
+| Pinecone API Key | ConhecimentosPM + ingestão RAG |
+| Header Auth | Validação do x-webhook-secret no webhook |
+| Google Drive OAuth2 | Download dos .md para ingestão |
+
+### Variáveis de ambiente Vercel
+| Variável | Valor |
+|---|---|
+| `N8N_WEBHOOK_URL` | URL de produção `/webhook/bia` (NÃO `/webhook-test/bia`) |
+| `WEBHOOK_SECRET` | Mesmo valor configurado no Header Auth do n8n |
+
+### Supabase — tabela `alunos`
+- 3.030 linhas, dados anonimizados do Datathon
+- RA no formato `RA-XXXX` (ex: RA-1, RA-42, RA-3030)
+- `nome` anonimizado: Aluno-1 … Aluno-3030 — **nunca mostrar ao aluno**
+- Colunas: id, ra, nome, fase, ano, inde, pedra, ian, ida, ieg, iaa, ips, ipp, ipv, defasagem
+
+### Pinecone — índice RAG
+- Index: `passosmagicos`
+- **Dimensões: 1536** (text-embedding-3-small padrão — NÃO usar 512)
+- Metric: cosine
+- Documentos indexados: `relatorio_atividades_2025_bia.md` + `codigo_etica_conduta.md`
+- Manter separados (domínios semânticos distintos: programas vs ética)
+- Chunk size recomendado: 1000 chars, overlap 150
+
+### Arquitetura do prompt (decisão desta sessão)
+O prompt atual mistura identidade, regras, fluxos e lógica de recomendação. A evolução planejada:
+
+**Fase atual (MVP):** tudo no system prompt + RAG
+**Próxima fase:** adicionar nó `ProcessarPerfil` entre BuscarAluno e o agente:
+```javascript
+// Nó Code no n8n — gera JSON estruturado antes do LLM
+const dados = $input.first().json[0];
+const forca = calcularForca(dados);      // indicador mais alto
+const atencao = calcularAtencao(dados);  // indicador mais baixo
+const recomendacoes = gerarRecomendacoes(dados); // regras estruturadas
+return { forca, atencao, recomendacoes, pedra: dados.pedra, fase: dados.fase };
+```
+Isso reduz alucinações: o LLM só transforma JSON em conversa, não decide regras.
+
+**Exemplos few-shot** substituem regras longas — modelos aprendem melhor por exemplo do que por instrução.
+
+### Testes realizados e resultados
+| Cenário | Status | Observação |
+|---|---|---|
+| Abertura sem RA | ✅ | Pede RA antes de ajudar (fix desta sessão) |
+| Off-topic (Ferrari) | ✅ | Redireciona com leveza |
+| RA válido + dados | ✅ | BuscarAluno dispara, celebra positivo primeiro |
+| Pedir nome | ⚠️ | Às vezes pula, mas pega quando aluno diz natural |
+| Recomendação correta | ✅ | Construindo Sonhos para IDA baixo |
+| RAG (Vem Ser) | ❌ | Pinecone vazio — bloqueador pré-produção |
+| Crise / CVV 188 | ✅ | Acolhe + orienta CVV sem diagnóstico |
+| RA inválido | ✅ | Resposta acolhedora, orienta coordenação |
+
+### Segurança
+- Secrets **NUNCA** no frontend JS (`index.html`)
+- `api/chat.js` é o único lugar com acesso a `N8N_WEBHOOK_URL` e `WEBHOOK_SECRET`
+- n8n valida `x-webhook-secret` em todo request
+- LGPD: indicadores numéricos enviados à OpenAI — em produção exige DPA ou processamento local
 
 ---
 
