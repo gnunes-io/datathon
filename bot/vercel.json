@@ -1,9 +1,4 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": "",
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/api/chat", "destination": "/api/chat.js" }
-  ]
+  "outputDirectory": "."
 }
