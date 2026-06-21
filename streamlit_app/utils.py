@@ -7,7 +7,7 @@ import streamlit as st
 
 # ── Caminhos ──────────────────────────────────────────────────────────────────
 _HERE      = os.path.dirname(os.path.abspath(__file__))
-LOGO_PATH  = os.path.join(_HERE, '..', 'Passos-magicos-icon-cor.png')
+LOGO_PATH  = os.path.join(_HERE, 'assets', 'Passos-magicos-icon-cor.png')
 MODEL_PATH = os.path.join(_HERE, '..', 'model', 'modelo_risco_defasagem.pkl')
 DATA_PATH  = os.path.join(_HERE, '..', 'data')
 

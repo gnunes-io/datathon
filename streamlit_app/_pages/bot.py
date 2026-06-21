@@ -133,7 +133,7 @@ expõe credenciais; um **proxy serverless** que autentica e encaminha as mensage
 e um **workflow n8n** que orquestra o agente GPT-4o-mini com ferramentas especializadas.
 """)
 
-_ARCH_IMG = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "Arquitetura_Bia.png")
+_ARCH_IMG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "Arquitetura_Bia.png")
 if os.path.exists(_ARCH_IMG):
     st.image(_ARCH_IMG, use_container_width=True)
 
