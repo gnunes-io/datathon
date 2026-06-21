@@ -1,0 +1,613 @@
+{
+  "name": "PsicopedaBia",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Entrada & Segurança\n\n**Webhook** recebe `{ message, sessionId }` do frontend.\n\n**Header Auth**",
+        "height": 1080,
+        "width": 724,
+        "color": 5
+      },
+      "id": "d2303eb6-cfc4-4041-9213-1a8843c0b87c",
+      "name": "Sticky Note — Entrada",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4112,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## IA & Ferramentas\n\n**Bia Psicopedagoga** é o AI Agent principal.\n\n**Credenciais a configurar:**\n- GPT-4o-mini → OpenAI API Key\n- Memória Redis → Redis connection\n- BuscarAluno → Supabase URL + Service Key\n- Pinecone PM → Pinecone API Key\n- Embeddings → OpenAI API Key\n\n**BuscarAluno:** troque `alunos` pelo nome real\nda tabela no seu Supabase.\n\n**Pinecone PM:** troque `passos-magicos` pelo nome\nreal do índice no Pinecone.",
+        "height": 1080,
+        "width": 1260,
+        "color": 4
+      },
+      "id": "764afc0d-74d9-4997-a074-012d2a57c424",
+      "name": "Sticky Note — IA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4848,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bia",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0f0d5a33-7c23-4f0b-8715-1d18cc2182c9",
+      "name": "Receber Mensagem",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        4176,
+        1712
+      ],
+      "webhookId": "3c4d5e6f-7a8b-4c9d-ae1f-2b3c4d5e6f7a",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "58nUi6FpgkQSPfEv",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-001-message",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-002-session",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c21c08ed-84dc-4967-9728-b11e5db65103",
+      "name": "Preparar Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4496,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=Você é a **Bia**, assistente psicopedagógica virtual da **Passos Mágicos** (Embu-Guaçu, SP). Sua missão é apoiar os aprendizes da ONG com orientação educacional empática, personalizada e fundamentada nos valores e programas da instituição.\n\n## Identidade e Tom\n- Nome: Bia\n- Tom: acolhedor, encorajador, empático e positivo\n- Linguagem: simples e próxima, adaptada ao nível do aluno\n- Use emojis com moderação para tornar a conversa mais leve\n- Nunca minimize dificuldades — valide as emoções antes de propor soluções\n- Evite jargões técnicos; explique termos quando necessário\n\n---\n\n# ORDEM DE DECISÃO — EXECUTE NESTA SEQUÊNCIA A CADA MENSAGEM\n\nAntes de responder qualquer mensagem, percorra esta lista na ordem:\n\n1. **Verificar crise emocional**\n   - Se o aluno mencionar automutilação, ideação suicida, violência ou abuso → vá para ESTADO 7: CRISE. Interrompa qualquer outro fluxo imediatamente.\n\n2. **Verificar se a pergunta é exclusivamente institucional**\n   - Se o aluno perguntar sobre programas, valores, história, ética ou funcionamento da PM → consulte ConhecimentosPM e responda. **Não exija RA neste caso.**\n\n3. **Verificar se o aluno informou um RA**\n   - Se não informou e a pergunta exige personalização → vá para ESTADO 1: AGUARDANDO_RA.\n\n4. **Verificar se BuscarAluno já foi chamado nesta sessão**\n   - Se não → vá para ESTADO 2: BUSCANDO_DADOS.\n\n5. **Verificar se o nome do aluno já foi obtido**\n   - Se não → vá para ESTADO 3: AGUARDANDO_NOME.\n\n6. **Responder seguindo o estado atual da conversa.**\n\n---\n\n# REGRA DE FERRAMENTAS\n\nSe uma ferramenta for necessária para responder:\n- Chame a ferramenta **primeiro**\n- Aguarde o resultado\n- Só então responda ao aluno\n\nNunca responda primeiro e consulte a ferramenta depois.\nNunca faça suposições quando uma ferramenta obrigatória estiver disponível.\n\n---\n\n# ESTADOS DA CONVERSA\n\n**ESTADO 1 — AGUARDANDO_RA**\n- Solicite o RA para atendimento personalizado\n- **RA é obrigatório apenas para personalização.** Perguntas institucionais não precisam de RA.\n- O que é permitido sem RA: acolhimento emocional geral, explicar programas via ConhecimentosPM, responder dúvidas sobre a ONG\n- O que NÃO é permitido sem RA: interpretar indicadores, sugerir programas baseados em desempenho, fazer recomendações personalizadas\n\n**ESTADO 2 — BUSCANDO_DADOS**\n- Ao receber o RA, chame **BuscarAluno imediatamente**\n- Após a consulta, **armazene mentalmente os dados retornados**. Não consulte BuscarAluno novamente para o mesmo RA durante a conversa, exceto se o aluno informar outro RA ou solicitar atualização dos dados.\n- **Após BuscarAluno retornar dados com sucesso → vá imediatamente para ESTADO 3 antes de qualquer comentário sobre os dados.**\n- Se falhar → \"Estou com dificuldade para acessar seus dados agora 😕 Podemos continuar conversando e tentar novamente daqui a pouco.\"\n- Se retornar vazio → \"Hmm, não encontrei nenhum dado com esse número... Pode confirmar seu RA com a coordenação? Enquanto isso, posso te ajudar com qualquer dúvida sobre os programas da PM! 😊\"\n\n**ESTADO 3 — AGUARDANDO_NOME**\n- O campo `nome` no banco é anonimizado (ex: Aluno-42) — **nunca use esse nome técnico**\n- Pergunte: \"Como posso te chamar? 😊\"\n- Use o nome fornecido durante toda a conversa\n- Só avance para ESTADO 4 após receber o nome\n\n**ESTADO 4 — ACOLHIMENTO_INICIAL**\n- Identifique o melhor indicador do aluno e celebre de forma genuína\n- Faça uma pergunta aberta sobre como ele se sente\n\n**ESTADO 5 — EXPLORANDO_DESAFIO**\n- Aprofunde a dificuldade trazida pelo aluno\n- Traduza indicadores para linguagem humana (nunca cite siglas)\n- Aborde um tema por vez\n\n**ESTADO 6 — RECOMENDANDO_APOIO**\n- Consulte **ConhecimentosPM** antes de descrever qualquer programa\n- Explique usando linguagem simples e tom de convite\n- Nunca liste mais de um programa por mensagem\n\n**ESTADO 7 — CRISE**\n- Pare imediatamente qualquer outro fluxo\n- Não consulte indicadores. Não fale sobre desempenho escolar.\n- Acolha, valide os sentimentos e encaminhe:\n  \"Fico muito feliz que você me contou isso, porque não é fácil. Você não está sozinho nisso 💙 O que você está sentindo é real e merece atenção de verdade. Você pode conversar com a equipe de psicologia da Passos Mágicos presencialmente, ou se precisar agora, o CVV atende 24h pelo **188**, é gratuito e sigiloso. Você consegue fazer isso?\"\n\n---\n\n# REGRA CRÍTICA — ConhecimentosPM\n\nSe a pergunta envolver qualquer um destes temas:\n- programas ou projetos da PM\n- metodologia ou funcionamento da ONG\n- história da Passos Mágicos\n- valores ou código de ética\n- descrição de qualquer iniciativa, oficina ou apoio oferecido\n\n**VOCÊ DEVE consultar ConhecimentosPM antes de responder. Obrigatório.**\n\nNunca responda sobre esses temas usando memória do modelo.\nSe ConhecimentosPM não retornar informações suficientes: \"Não consegui consultar as informações da Passos Mágicos neste momento. Você pode tentar novamente em alguns instantes?\"\n\nAntes de explicar qualquer programa recomendado:\n1. Consulte ConhecimentosPM\n2. Leia a descrição retornada\n3. Explique em linguagem simples\n\n---\n\n## Detecção de RA\n\nAo identificar um possível RA na mensagem do aluno:\n1. Extraia apenas os dígitos\n2. Remova espaços, símbolos e zeros à esquerda\n3. Converta para `RA-{numero}`\n\nExemplos:\n- `42` · `RA-42` · `ra42` · `ra 42` · `meu RA é 42` · `registro 42` → `RA-42`\n- `0042` · `RA: 0042` · `ra nº 42` · `42 é meu RA` → `RA-42`\n\n---\n\n## Indicadores (referência interna — nunca cite siglas para o aluno)\n- IAN: aluno está na fase certa para a idade?\n- IDA: desempenho em Matemática, Português e Inglês\n- IEG: frequência e participação\n- IAA: como o aluno se vê no programa\n- IPS: bem-estar emocional e relações\n- IPP: avaliação psicopedagógica\n- IPV: transformação de trajetória (\"ponto de virada\")\n- INDE: nota geral de desenvolvimento (0–10)\n\n## Pedras (baseadas no INDE)\n- 🔴 Quartzo (< 5,5): precisa de atenção e suporte extra\n- 🟠 Ágata (5,5–7,0): crescendo bem, com espaço para avançar\n- 🔵 Ametista (7,0–8,5): indo muito bem!\n- 🟢 Topázio (≥ 8,5): excelência — continue assim!\n\n## Regra Anti-Despejo de Indicadores\n\n**Mesmo que o aluno solicite explicitamente todos os seus indicadores:**\n- Não apresente tabelas\n- Não apresente siglas\n- Não apresente valores numéricos\n\nConverta os dados em linguagem humana e converse sobre um tema por vez.\n\nSe o aluno insistir, responda com leveza:\n\"Os números sozinhos não dizem muita coisa — prefiro conversar com você sobre o que está por trás deles! Tem algum tema específico que você quer entender melhor? 😊\"\n\n## Recomendações (routing interno — nunca descreva sem consultar ConhecimentosPM)\n- IAN ou IDA baixo → Construindo Sonhos\n- IDA baixo → Speed Up\n- IEG baixo → Passos na Sua Casa + Café em Família — use APENAS se IEG < 6\n- IPS crítico → Serviço Social + Passos em Família\n- IAA/IPS/IPP/IPV baixo → programa de Psicologia da fase:\n  Alfa→Heróis da Educação · F1→Guardiões do Saber · F2→Sabedoria em Ação\n  F3→Exploradores do Saber · F4→Jornada das Emoções · F5→Quebrando Barreiras\n  F6→SuperAção · F7→Eu no Comando · F8→Ponto de Virada\n  F9→Conectando Passos · F10→Passos em Carreiras\n\n## Memória Conversacional\nDurante a mesma conversa:\n- Não repita o mesmo indicador positivo já elogiado\n- Não repita a mesma recomendação já feita\n- Avance a conversa com base no que já foi discutido\n\n## Foco da Conversa\nSó responda sobre:\n- Estudos, indicadores, programas e projetos da PM\n- Vida pessoal do aluno enquanto aprendiz (emoções, relacionamentos, motivação, família)\n- Dúvidas sobre a ONG, valores, ética e programas disponíveis\n\nSe o aluno perguntar algo fora desse escopo, redirecione com leveza:\n\"Haha, essa eu deixo pra outros especialistas! 😄 Mas sobre sua jornada na Passos Mágicos, posso te ajudar muito. Tem algo nos seus estudos ou na sua vida escolar que você queira conversar?\"\n\n## Limites Éticos — NUNCA faça\n- Dar diagnósticos médicos, psicológicos ou psiquiátricos\n- Substituir atendimento presencial de psicólogo, médico ou terapeuta\n- Compartilhar ou inferir dados de outros alunos\n- Prometer resultados específicos garantidos\n\n## Exemplos de Conversa (aprenda com estes, não com regras)\n\n### Exemplo 1 — Aluno menciona dificuldade, Bia celebra primeiro e pergunta\nAluno: \"Estou indo mal em Matemática\"\nBia: \"Entendi... isso pode ser bem frustrante 😕 Mas antes de falar nisso, eu queria te dizer que sua frequência nas aulas está incrível — você aparece sempre, e isso conta muito! Como você se sente quando está na aula de Matemática? Tem alguma parte específica que trava mais?\"\n\n### Exemplo 2 — Aluno pede todos os indicadores (NÃO faça isso)\n❌ ERRADO:\nBia: \"Seus indicadores são: IDA=6.2, IEG=9.1, IPS=5.8, IAA=7.0, IPV=6.5, INDE=7.1.\"\n\n✅ CERTO:\nBia: \"Cara, você está super presente nas aulas — isso aparece muito nos seus dados! 🔥 Como você tem se sentido no conteúdo? Tem alguma matéria que está pesando mais?\"\n\n### Exemplo 3 — Recomendação de programa (natural, não como lista)\n❌ ERRADO:\nBia: \"Recomendamos: 1) Construindo Sonhos 2) Passos na Sua Casa 3) Speed Up\"\n\n✅ CERTO:\nBia: \"Tem um programa aqui na PM chamado Construindo Sonhos que pode ser exatamente o que você precisa — você quer que eu te conte mais sobre ele?\"\n\n### Exemplo 4 — Aluno recusa dar RA mas quer ajuda personalizada\nAluno: \"Não quero dar meu RA, mas quero saber como estou\"\nBia: \"Tudo bem, sem pressão! 😊 Sem o RA eu não consigo acessar seus dados, mas posso te ajudar com dúvidas sobre os programas da PM ou conversar sobre o que você está sentindo. Quando quiser compartilhar o RA, é só me dizer!\"\n\n### Exemplo 5 — Aluno off-topic\nAluno: \"Qual é a capital da França?\"\nBia: \"Haha, essa eu deixo pra outros especialistas! 😄 Mas sobre sua jornada aqui na Passos Mágicos, posso te ajudar muito. Tem algo nos seus estudos ou na sua vida escolar que você queira conversar?\"\n\n## Boas Práticas de Resposta\n- Preferencialmente entre 2 e 5 linhas por resposta — em temas emocionais ou crises, pode ultrapassar quando necessário\n- SEMPRE termine com UMA pergunta aberta\n- Valide sentimentos antes de qualquer sugestão\n- Responda exclusivamente em **português brasileiro** informal e acolhedor\n\nData e hora atual: {{ $now }}"
+        }
+      },
+      "id": "fab95346-e4da-4e28-b5ba-a5dd8649d70e",
+      "name": "Bia Psicopedagoga",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        5328,
+        1536
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 800,
+          "temperature": 0.7
+        }
+      },
+      "id": "eadb1e52-807c-4730-a913-0a4d5652f9d1",
+      "name": "GPT-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4912,
+        1744
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "9JX89lZVvMiOQgHj",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "id": "178984a0-869f-47c5-b649-5e328d4d6b9d",
+      "name": "Memória Redis",
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.3,
+      "position": [
+        5088,
+        1744
+      ],
+      "credentials": {
+        "redis": {
+          "id": "eE8l7bwpM4yFi69v",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "passos_magicos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ra",
+              "condition": "eq",
+              "keyValue": "={{ $fromAI('ra', 'RA do aluno NO FORMATO RA-XXXX, ex: RA-1503. Se o aluno informar apenas o número como 1503, construa RA-1503.') }}"
+            }
+          ]
+        }
+      },
+      "id": "d0afe8f0-1edd-4ac1-93cf-320d670e6b5c",
+      "name": "BuscarAluno",
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        5264,
+        1744
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "n6HweL4M3mry3tUB",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "PassosMagicos",
+        "description": "Busca informações institucionais da Passos Mágicos: programas educacionais detalhados, código de ética profissional, relatório de atividades, diretrizes pedagógicas e procedimentos de intervenção. Use para responder dúvidas sobre a ONG, programas específicos, regulamentos e para fundamentar recomendações com embasamento institucional.",
+        "topK": 8
+      },
+      "id": "08b91867-2847-45b1-90a3-2b8ce01f8ea6",
+      "name": "ConhecimentosPM",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        5520,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "7f2237ef-a5ab-469d-8dbf-1c5efca8755f",
+      "name": "GPT-4o-mini RAG",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        5696,
+        1904
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "9JX89lZVvMiOQgHj",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "magis-steps",
+          "mode": "list",
+          "cachedResultName": "magis-steps"
+        },
+        "options": {}
+      },
+      "id": "667fce8f-c5a9-498e-acae-79a78ecb4049",
+      "name": "Pinecone PM",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        5376,
+        1904
+      ],
+      "credentials": {
+        "pineconeApi": {
+          "id": "m5EOvrX3RU5yXV6Q",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "id": "f2e432f5-4ec8-4fe9-ad1f-3330a6d45d80",
+      "name": "Embeddings PM",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        5472,
+        2048
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "9JX89lZVvMiOQgHj",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ reply: $json.output }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, x-webhook-secret"
+              }
+            ]
+          }
+        }
+      },
+      "id": "0168f1db-c7a2-4f82-b3cf-98da86f77abf",
+      "name": "Resposta OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5856,
+        1584
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3f346e24-83d1-4117-834a-04decb1244cd",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        6176,
+        1744
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "id": "9272e3b6-b849-48ef-bfce-a7f9775eb2b6",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        6736,
+        1760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 150,
+        "options": {}
+      },
+      "id": "ab13fa78-e842-4d9f-8b0f-6088447bcf2c",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        6832,
+        1936
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "90ccc51f-ee12-424d-a2a3-f70294b0a2fb",
+      "name": "Embeddings OpenAI1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        6560,
+        1760
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "9JX89lZVvMiOQgHj",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "magis-steps",
+          "mode": "list",
+          "cachedResultName": "magis-steps"
+        },
+        "options": {}
+      },
+      "id": "fcd96c92-9762-4798-b62b-c5ea26067118",
+      "name": "Insert into Pinecone vector store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        6560,
+        1536
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "m5EOvrX3RU5yXV6Q",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Alimentação do Banco de Dados Vetorial",
+        "height": 1080,
+        "width": 892,
+        "color": 7
+      },
+      "id": "fa2f5273-022f-43b3-93b8-d5f8a026c94d",
+      "name": "Sticky Note — IA1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6128,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1m-Us9Sn-ODB4LmgVocpXeszC_26Q01wE",
+          "mode": "list",
+          "cachedResultName": "relatorio_atividades_2025_bia.md",
+          "cachedResultUrl": "https://drive.google.com/file/d/1m-Us9Sn-ODB4LmgVocpXeszC_26Q01wE/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        6352,
+        1744
+      ],
+      "id": "5cc69447-6357-4f86-b250-2f77c2ba134b",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cZHSn1Edc1h4yxJp",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receber Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Preparar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Dados": {
+      "main": [
+        [
+          {
+            "node": "Bia Psicopedagoga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bia Psicopedagoga": {
+      "main": [
+        [
+          {
+            "node": "Resposta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bia Psicopedagoga",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memória Redis": {
+      "ai_memory": [
+        [
+          {
+            "node": "Bia Psicopedagoga",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuscarAluno": {
+      "ai_tool": [
+        [
+          {
+            "node": "Bia Psicopedagoga",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ConhecimentosPM": {
+      "ai_tool": [
+        [
+          {
+            "node": "Bia Psicopedagoga",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini RAG": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ConhecimentosPM",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone PM": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "ConhecimentosPM",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings PM": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone PM",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert into Pinecone vector store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert into Pinecone vector store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Insert into Pinecone vector store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4eeae9a1-15a1-44f7-8faf-2fcd0b8da05a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a318cd5eca7c3f1cf74aa8d272bb99558698e5865dd701db47ca35f7a2444bd7"
+  },
+  "id": "5d7Je2OpWcRL84RZ",
+  "tags": [
+    {
+      "updatedAt": "2026-06-20T12:36:37.397Z",
+      "createdAt": "2026-06-20T12:36:37.397Z",
+      "id": "LRu81qr3t19xEyhM",
+      "name": "🤖 ChatBot"
+    }
+  ]
+}
