@@ -133,22 +133,9 @@ expõe credenciais; um **proxy serverless** que autentica e encaminha as mensage
 e um **workflow n8n** que orquestra o agente GPT-4o-mini com ferramentas especializadas.
 """)
 
-st.info(
-    "**Prompt para gerar o diagrama de arquitetura:**\n\n"
-    "Minimalist software architecture diagram, white background, left-to-right horizontal flow. "
-    "Five labeled boxes connected by arrows: "
-    "(1) 'Chat Interface' — browser icon, light blue fill; "
-    "(2) 'Vercel Proxy' — serverless function icon, dark blue fill (#003F74), white text; "
-    "(3) 'n8n Orchestrator' — gear/workflow icon, gold fill (#E8A020), white text; "
-    "(4) 'GPT-4o-mini' — AI brain icon, purple fill; "
-    "plus three side-branch boxes below n8n: 'Redis Memory' (cylinder, teal), "
-    "'Supabase' (cylinder, green, labeled Student Data), "
-    "'Pinecone' (cylinder, blue, labeled RAG Knowledge). "
-    "Arrows labeled: HTTPS POST → x-webhook-secret → Orchestrate → Generate. "
-    "Clean sans-serif font, Portuguese labels, no decorative elements, "
-    "flat design with subtle drop shadows. Brand accent: #003F74 and #E8A020.",
-    icon="🎨",
-)
+_ARCH_IMG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Arquitetura_Bia.png")
+if os.path.exists(_ARCH_IMG):
+    st.image(_ARCH_IMG, use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
