@@ -47,7 +47,7 @@ Quatro entregáveis:
     ├── api/chat.js                    # Vercel serverless: proxy seguro para n8n
     ├── vercel.json                    # outputDirectory: "." (zero-config)
     ├── package.json                   # node 24.x, sem dependências
-    └── workflow_bia.json              # workflow n8n exportado (importar no n8n)
+    └── PsicopedaBia.json              # workflow n8n exportado (importar no n8n)
 ```
 
 ---
@@ -266,17 +266,17 @@ O bot evoluiu de "3 personas" para a **Bia**, assistente psicopedagógica única
                               (env vars Vercel — NUNCA no frontend)
 ```
 
-**n8n workflow** (`workflow_bia.json`):
+**n8n workflow** (`PsicopedaBia.json`):
 ```
 Receber Mensagem (webhook POST /bia, header auth)
   → Preparar Dados (extrair message + sessionId)
   → Bia Psicopedagoga (AI Agent GPT-4o-mini)
       ├── Memória Redis (sessionKey = sessionId, janela 20 msgs)
-      ├── BuscarAluno (Supabase tool — tabela alunos, filtro ra = RA-XXXX)
-      └── ConhecimentosPM (Vector Store tool → Pinecone passosmagicos)
+      ├── BuscarAluno (Supabase tool — tabela passos_magicos, filtro ra = RA-XXXX)
+      └── ConhecimentosPM (Vector Store tool → Pinecone magis-steps)
             ├── GPT-4o-mini RAG (LLM do retriever)
-            ├── Pinecone PM (index passosmagicos)
-            └── Embeddings PM (text-embedding-3-small)
+            ├── Pinecone PM (index magis-steps)
+            └── Embeddings PM (text-embedding-3-small, 1536 dims)
   → Resposta OK (respondToWebhook com JSON { reply })
 ```
 
@@ -293,7 +293,7 @@ Manual Trigger → Google Drive (download .md) → Insert Pinecone
 |---|---|
 | OpenAI API Key | GPT-4o-mini (agente) + GPT-4o-mini RAG + Embeddings |
 | Redis | Memória de conversa por sessionId |
-| Supabase URL + Service Key | BuscarAluno (tabela `alunos`) |
+| Supabase URL + Service Key | BuscarAluno (tabela `passos_magicos`) |
 | Pinecone API Key | ConhecimentosPM + ingestão RAG |
 | Header Auth | Validação do x-webhook-secret no webhook |
 | Google Drive OAuth2 | Download dos .md para ingestão |
@@ -304,48 +304,49 @@ Manual Trigger → Google Drive (download .md) → Insert Pinecone
 | `N8N_WEBHOOK_URL` | URL de produção `/webhook/bia` (NÃO `/webhook-test/bia`) |
 | `WEBHOOK_SECRET` | Mesmo valor configurado no Header Auth do n8n |
 
-### Supabase — tabela `alunos`
+### Supabase — tabela `passos_magicos`
 - 3.030 linhas, dados anonimizados do Datathon
 - RA no formato `RA-XXXX` (ex: RA-1, RA-42, RA-3030)
 - `nome` anonimizado: Aluno-1 … Aluno-3030 — **nunca mostrar ao aluno**
 - Colunas: id, ra, nome, fase, ano, inde, pedra, ian, ida, ieg, iaa, ips, ipp, ipv, defasagem
 
 ### Pinecone — índice RAG
-- Index: `passosmagicos`
-- **Dimensões: 1536** (text-embedding-3-small padrão — NÃO usar 512)
+- Index: `magis-steps`
+- **Dimensões: 1536** (text-embedding-3-small — NÃO usar 512)
 - Metric: cosine
-- Documentos indexados: `relatorio_atividades_2025_bia.md` + `codigo_etica_conduta.md`
-- Manter separados (domínios semânticos distintos: programas vs ética)
-- Chunk size recomendado: 1000 chars, overlap 150
+- Documentos indexados: `relatorio_atividades_2025_bia.md` + `codigo_etica_conduta.md` (ingeridos manualmente, um de cada vez)
+- Chunk size: 1000 chars, overlap 150
 
-### Arquitetura do prompt (decisão desta sessão)
-O prompt atual mistura identidade, regras, fluxos e lógica de recomendação. A evolução planejada:
+### ConhecimentosPM — configuração da UI (não serializada no JSON)
+Campos visíveis no n8n que não aparecem no `PsicopedaBia.json` exportado:
+- **Data Name**: usar `PassosMagicos` (sem espaços) — gera a frase "Useful for when you need to answer questions about PassosMagicos..." que o LLM lê para decidir quando chamar o tool. Evitar nomes técnicos como `magissteps`.
+- **Limit**: 8 chunks retornados por consulta
+- **Embeddings PM**: `text-embedding-3-small` + 1536 dims (deve bater com o modelo de ingestão)
 
-**Fase atual (MVP):** tudo no system prompt + RAG
-**Próxima fase:** adicionar nó `ProcessarPerfil` entre BuscarAluno e o agente:
-```javascript
-// Nó Code no n8n — gera JSON estruturado antes do LLM
-const dados = $input.first().json[0];
-const forca = calcularForca(dados);      // indicador mais alto
-const atencao = calcularAtencao(dados);  // indicador mais baixo
-const recomendacoes = gerarRecomendacoes(dados); // regras estruturadas
-return { forca, atencao, recomendacoes, pedra: dados.pedra, fase: dados.fase };
-```
-Isso reduz alucinações: o LLM só transforma JSON em conversa, não decide regras.
+### Arquitetura do prompt (versão atual)
 
-**Exemplos few-shot** substituem regras longas — modelos aprendem melhor por exemplo do que por instrução.
+O prompt é estruturado em camadas determinísticas para maximizar confiabilidade com GPT-4o-mini:
 
-### Testes realizados e resultados
+1. **ORDEM DE DECISÃO** — sequência executada a cada mensagem: crise → institucional → RA → BuscarAluno → nome → resposta
+2. **REGRA DE FERRAMENTAS** — sempre chamar ferramenta antes de responder, nunca o contrário
+3. **ESTADOS 1–7** — fluxo explícito: AGUARDANDO_RA → BUSCANDO_DADOS → AGUARDANDO_NOME → ACOLHIMENTO_INICIAL → EXPLORANDO_DESAFIO → RECOMENDANDO_APOIO → CRISE
+4. **REGRA CRÍTICA ConhecimentosPM** — obrigatório para qualquer tema institucional; nunca usar memória do modelo
+5. **Exemplos few-shot** — calibram comportamento por exemplo, não só por regra
+
+**Sem RA:** permitido responder sobre ONG, programas e valores via ConhecimentosPM — RA só exigido para personalização.
+**Com RA:** após ESTADO 3 (nome confirmado) — nunca descrever programa sem consultar ConhecimentosPM.
+**Recomendações:** seção de routing interno (indicador → programa) sem descrições — descrições sempre vêm do RAG.
+
+### Testes realizados e resultados (prompt v3 — com ESTADOS)
 | Cenário | Status | Observação |
 |---|---|---|
-| Abertura sem RA | ✅ | Pede RA antes de ajudar (fix desta sessão) |
-| Off-topic (Ferrari) | ✅ | Redireciona com leveza |
-| RA válido + dados | ✅ | BuscarAluno dispara, celebra positivo primeiro |
-| Pedir nome | ⚠️ | Às vezes pula, mas pega quando aluno diz natural |
-| Recomendação correta | ✅ | Construindo Sonhos para IDA baixo |
-| RAG (Vem Ser) | ❌ | Pinecone vazio — bloqueador pré-produção |
-| Crise / CVV 188 | ✅ | Acolhe + orienta CVV sem diagnóstico |
-| RA inválido | ✅ | Resposta acolhedora, orienta coordenação |
+| Programa sem RA (Construindo Sonhos) | ✅ | Respondeu sem pedir RA — regra institucional funciona |
+| RA formato `0042` informal | ✅ | Extraiu `RA-42` corretamente, BuscarAluno disparou |
+| Anti-despejo de indicadores | ✅ | Recusou listagem mesmo quando pedido explicitamente |
+| Crise emocional / CVV 188 | ✅ | ESTADO 7 perfeito — zero menção a indicadores ou programas |
+| Off-topic (Copa do Mundo) | ✅ | Redirecionou com leveza |
+| ESTADO 3 (pedir nome após BuscarAluno) | ⚠️ | Às vezes pula — fix aplicado: "vá para ESTADO 3 antes de qualquer comentário" |
+| ConhecimentosPM chamado para perguntas institucionais | ⏳ | Speed Up confirmou RAG ativo; Construindo Sonhos pendente confirmação no n8n |
 
 ### Segurança
 - Secrets **NUNCA** no frontend JS (`index.html`)
