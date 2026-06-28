@@ -115,7 +115,7 @@ img_col, txt_col = st.columns([0.42, 0.58], gap="large")
 
 with img_col:
     if os.path.exists(_INTRO_IMG):
-        st.image(_INTRO_IMG, use_container_width=True)
+        st.image(_INTRO_IMG, width=300)
 
 with txt_col:
     st.markdown("### Por que criamos a Bia?")
