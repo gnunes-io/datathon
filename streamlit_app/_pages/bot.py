@@ -225,24 +225,29 @@ if os.path.exists(_ARCH_IMG):
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ── Galeria — carrossel placeholder ───────────────────────────────────────────
-st.markdown("### 📸 Galeria")
-st.caption("Em breve: registros do desenvolvimento, apresentações e bastidores do projeto.")
+# ── Stack tecnológico ─────────────────────────────────────────────────────────
+st.markdown("### Stack tecnológico")
+st.caption("Ferramentas que tornam a Bia possível.")
 
-_PH_ITEMS = [
-    ("📷", "Desenvolvimento"),
-    ("👥", "Nossa Equipe"),
-    ("🎤", "Apresentação"),
-    ("🏫", "Passos Mágicos"),
-    ("💻", "Tech Hub"),
+_STACK = [
+    ("bia.png",       "Bia"),
+    ("openapi.png",   "OpenAI"),
+    ("n8n.png",       "n8n"),
+    ("pinecone.png",  "Pinecone"),
+    ("supabase.png",  "Supabase"),
+    ("vercel.png",    "Vercel"),
 ]
-ph_html = "".join(f"""
-    <div class="bia-ph-card">
-        <span class="ph-icon">{icon}</span>
-        <span class="ph-lbl">{label}</span>
-    </div>""" for icon, label in _PH_ITEMS)
 
-st.markdown(f'<div class="bia-carousel">{ph_html}</div>', unsafe_allow_html=True)
+_logo_cols = st.columns(6, gap="medium")
+for col, (fname, label) in zip(_logo_cols, _STACK):
+    with col:
+        img_path = os.path.join(_ASSETS, fname)
+        if os.path.exists(img_path):
+            st.image(img_path, use_container_width=True)
+        st.markdown(
+            f'<p style="text-align:center;font-size:0.72rem;color:#7C3AED;font-weight:600;margin-top:0.3rem;">{label}</p>',
+            unsafe_allow_html=True
+        )
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
