@@ -45,17 +45,20 @@ st.markdown("""
     letter-spacing: 0.01em;
 }
 
-/* feature cards: inline styles por card, não usa .step-card global */
+/* feature cards */
 .bia-card {
-    background: white;
+    background: linear-gradient(145deg, #ffffff 60%, rgba(237,233,254,0.4) 100%);
     border-radius: 14px;
     padding: 1.5rem 1.2rem 1.35rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 10px rgba(124,58,237,0.08);
     margin-bottom: 1.1rem;
     height: 100%;
+    position: relative;
+    overflow: hidden;
 }
-.bia-card .icon { font-size: 2rem; margin-bottom: 0.6rem; }
-.bia-card h4    { font-size: 0.95rem; font-weight: 700; margin: 0 0 0.5rem; }
+.bia-card .icon { font-size: 2rem; margin-bottom: 0.6rem; position: relative; z-index: 1; }
+.bia-card h4    { font-size: 0.95rem; font-weight: 700; margin: 0 0 0.5rem; position: relative; z-index: 1; }
+.bia-card p     { position: relative; z-index: 1; }
 .bia-card p     { color: #64748B; font-size: 0.82rem; margin: 0; line-height: 1.55; }
 
 /* carousel placeholder */
@@ -186,17 +189,25 @@ _CARDS = [
      "mas mantendo o propósito do canal."),
 ]
 
+_DEC_LG = "position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(124,58,237,0.07);pointer-events:none;"
+_DEC_SM = "position:absolute;bottom:-14px;left:-14px;width:50px;height:50px;border-radius:50%;background:rgba(124,58,237,0.05);pointer-events:none;"
+_DEC_XS = "position:absolute;top:50%;right:10px;width:24px;height:24px;border-radius:50%;background:rgba(124,58,237,0.04);pointer-events:none;"
+
 c1, c2 = st.columns(2, gap="large")
 for i, (icon, title, text) in enumerate(_CARDS):
     col = c1 if i % 2 == 0 else c2
     with col:
-        st.markdown(f"""
-        <div class="bia-card" style="border-top:4px solid #7C3AED;">
-            <div class="icon" style="text-align:center;">{icon}</div>
-            <h4 style="color:#374151;text-align:center;">{title}</h4>
-            <p>{text}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="bia-card" style="border-top:4px solid #7C3AED;">'
+            f'<div style="{_DEC_LG}"></div>'
+            f'<div style="{_DEC_SM}"></div>'
+            f'<div style="{_DEC_XS}"></div>'
+            f'<div class="icon" style="text-align:center;">{icon}</div>'
+            f'<h4 style="color:#374151;text-align:center;">{title}</h4>'
+            f'<p>{text}</p>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
