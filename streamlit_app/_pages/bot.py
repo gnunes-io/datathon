@@ -1,5 +1,4 @@
 """Página Assistente Psicopedagógico, Bia."""
-import base64
 import os
 import sys
 import streamlit as st
@@ -11,27 +10,11 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 BOT_URL = "https://passos-magicos-html.vercel.app/"
 
-# ── Avatar (base64 para embed inline no HTML) ─────────────────────────────────
-_AVATAR_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'assets', 'bia_avatar.png'
-)
-_avatar_b64 = None
-if os.path.exists(_AVATAR_PATH):
-    with open(_AVATAR_PATH, 'rb') as _f:
-        _avatar_b64 = base64.b64encode(_f.read()).decode()
+_ASSETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
+_INTRO_IMG  = os.path.join(_ASSETS, 'bia_intro.png')
+_ARCH_IMG   = os.path.join(_ASSETS, 'Arquitetura_Bia.png')
 
-_avatar_html = (
-    f'<img src="data:image/png;base64,{_avatar_b64}" alt="Bia" '
-    'style="width:88px;height:88px;border-radius:50%;object-fit:cover;'
-    'border:3px solid rgba(255,255,255,0.35);margin:0 auto 0.75rem;display:block;">'
-    if _avatar_b64 else
-    '<div style="width:88px;height:88px;border-radius:50%;'
-    'background:rgba(255,255,255,0.15);margin:0 auto 0.75rem;'
-    'display:flex;align-items:center;justify-content:center;font-size:2.5rem;">🤖</div>'
-)
-
-# ── CSS: tema lavanda da Bia (sobrepõe o tema azul PM nesta página) ───────────
+# ── CSS: tema lavanda da Bia ──────────────────────────────────────────────────
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] > .main { background: #F7F4FF !important; }
@@ -41,61 +24,60 @@ st.markdown("""
     border-radius: 16px; padding: 2rem 2rem 1.75rem;
     text-align: center; margin-bottom: 1.5rem;
 }
-.bia-hero h1  { color: #fff; font-size: 1.9rem; margin: 0 0 0.2rem; }
-.bia-hero .sub { color: #E9D5FF; font-size: 0.88rem; margin: 0; }
+.bia-hero h1  { color: #fff; font-size: 2rem; margin: 0 0 0.35rem; font-weight: 800; }
+.bia-hero .sub { color: #E9D5FF; font-size: 0.9rem; margin: 0; }
+.bia-cta-btn {
+    display: inline-block;
+    background: rgba(255,255,255,0.95);
+    color: #6D28D9 !important;
+    padding: 0.65rem 2.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none !important;
+    margin-top: 1.35rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    letter-spacing: 0.01em;
+    transition: opacity 0.15s;
+}
+.bia-cta-btn:hover { opacity: 0.9; }
 
 .section-hdr  { color: #7C3AED !important; border-bottom-color: #C4B5FD !important; }
 .step-card    { border-top-color: #7C3AED !important; }
 .step-card h4 { color: #7C3AED !important; }
 
 [data-testid="stMarkdown"] h3 { color: #6D28D9; }
-
 hr { border-color: #E9D5FF !important; }
-
-[data-testid="stLinkButton"] a {
-    background-color: #7C3AED !important;
-    border-color:     #7C3AED !important;
-    color: white !important;
-}
-[data-testid="stLinkButton"] a:hover {
-    background-color: #6D28D9 !important;
-    border-color:     #6D28D9 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ── Hero ──────────────────────────────────────────────────────────────────────
+# ── Hero com botão integrado ──────────────────────────────────────────────────
 st.markdown(f"""
 <div class="bia-hero">
-    {_avatar_html}
-    <h1>Bia</h1>
-    <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin:0.1rem 0 0.4rem;">
+    <h1>Conheça a Bia</h1>
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-bottom:0.3rem;">
         <span style="width:9px;height:9px;background:#4ade80;border-radius:50%;flex-shrink:0;"></span>
         <span class="sub">Assistente Psicopedagógica Virtual · Online</span>
     </div>
     <p style="color:#EDE9FE;font-size:0.82rem;margin:0;opacity:0.75;">
         Passos Mágicos · Apoio educacional disponível 24h
     </p>
+    <a class="bia-cta-btn" href="{BOT_URL}" target="_blank">Fale com a Bia →</a>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ── CTA principal ─────────────────────────────────────────────────────────────
-st.link_button(
-    "Conversar com a Bia →",
-    url=BOT_URL,
-    use_container_width=True,
-    type="primary",
-)
-st.caption("O chat será aberto em uma nova aba.")
-
-st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ── Por que criamos a Bia ─────────────────────────────────────────────────────
-st.markdown("### Por que criamos a Bia?")
-st.markdown("""
+# ── Por que criamos a Bia — imagem à esquerda ─────────────────────────────────
+img_col, txt_col = st.columns([0.42, 0.58], gap="large")
+
+with img_col:
+    if os.path.exists(_INTRO_IMG):
+        st.image(_INTRO_IMG, use_container_width=True)
+
+with txt_col:
+    st.markdown("### Por que criamos a Bia?")
+    st.markdown("""
 A equipe de Psicopedagogia da Passos Mágicos acompanha mais de **1.200 aprendizes**
 distribuídos entre Fase Alfa e Fase 10. Identificar quem precisa de atenção imediata,
 antes que a defasagem se consolide, é um desafio constante de tempo e escala.
@@ -104,12 +86,12 @@ A **Bia** nasceu para ampliar esse alcance: um canal de escuta disponível 24h, 
 acolher o aluno no momento em que ele sente a necessidade, coletar sinais de alerta e
 encaminhá-lo para o programa certo, sem substituir o olhar humano das psicopedagogas,
 mas chegando antes delas.
-""")
+    """)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ── Funcionalidades ───────────────────────────────────────────────────────────
+# ── Como a Bia funciona ───────────────────────────────────────────────────────
 st.markdown("### Como a Bia funciona")
 
 c1, c2 = st.columns(2, gap="large")
@@ -186,17 +168,11 @@ st.divider()
 
 # ── Arquitetura ───────────────────────────────────────────────────────────────
 st.markdown("### Arquitetura do sistema")
-
 st.markdown("""
 A Bia opera em três camadas: um **frontend seguro** (HTML/JS no Vercel) que nunca
 expõe credenciais; um **proxy serverless** que autentica e encaminha as mensagens;
 e um **workflow n8n** que orquestra o agente GPT-4o-mini com ferramentas especializadas.
 """)
-
-_ARCH_IMG = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "assets", "Arquitetura_Bia.png"
-)
 if os.path.exists(_ARCH_IMG):
     st.image(_ARCH_IMG, use_container_width=True)
 
@@ -209,9 +185,10 @@ st.markdown(
     "Informe seu **RA** (ex.: `RA-42`) para que a Bia possa personalizar o atendimento, "
     "ou faça uma pergunta livre sobre os programas da Passos Mágicos."
 )
-st.link_button(
-    "Abrir a Bia →",
-    url=BOT_URL,
-    use_container_width=True,
-    type="primary",
-)
+st.markdown(f"""
+<a class="bia-cta-btn" href="{BOT_URL}" target="_blank"
+   style="display:block; text-align:center; margin-top:0.75rem;">
+    Abrir a Bia →
+</a>
+<br>
+""", unsafe_allow_html=True)
