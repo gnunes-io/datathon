@@ -20,12 +20,16 @@ st.markdown("""
 [data-testid="stAppViewContainer"] > .main { background: #F7F4FF !important; }
 
 .bia-hero {
-    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
-    border-radius: 16px; padding: 2rem 2rem 1.75rem;
+    background: linear-gradient(140deg, #7C3AED 0%, #5B21B6 55%, #4C1D95 100%);
+    border-radius: 16px; padding: 2.5rem 2rem 2.25rem;
     text-align: center; margin-bottom: 1.5rem;
+    position: relative; overflow: hidden;
 }
-.bia-hero h1  { color: #fff; font-size: 2rem; margin: 0 0 0.35rem; font-weight: 800; }
-.bia-hero .sub { color: #E9D5FF; font-size: 0.9rem; margin: 0; }
+.bia-hero h1  { color: #fff; font-size: 2.1rem; margin: 0 0 0.35rem; font-weight: 800;
+                position: relative; z-index: 1; }
+.bia-hero .sub { color: #E9D5FF; font-size: 0.9rem; margin: 0;
+                 position: relative; z-index: 1; }
+.bia-hero .hero-content { position: relative; z-index: 1; }
 
 .bia-cta-btn {
     display: inline-block;
@@ -78,15 +82,29 @@ hr { border-color: #E9D5FF !important; }
 # ── Hero com botão integrado ──────────────────────────────────────────────────
 st.markdown(f"""
 <div class="bia-hero">
-    <h1>Conheça a Bia</h1>
-    <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-bottom:0.3rem;">
-        <span style="width:9px;height:9px;background:#4ade80;border-radius:50%;flex-shrink:0;"></span>
-        <span class="sub">Assistente Psicopedagógica Virtual · Online</span>
+    <!-- decorações de fundo -->
+    <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;
+                border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none;"></div>
+    <div style="position:absolute;bottom:-30px;left:-30px;width:130px;height:130px;
+                border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;"></div>
+    <div style="position:absolute;top:20px;left:60px;width:60px;height:60px;
+                border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+    <div style="position:absolute;bottom:15px;right:100px;width:40px;height:40px;
+                border-radius:50%;background:rgba(255,255,255,0.06);pointer-events:none;"></div>
+    <!-- conteúdo -->
+    <div class="hero-content">
+        <div style="display:inline-flex;align-items:center;gap:0.4rem;
+                    background:rgba(255,255,255,0.12);border-radius:20px;
+                    padding:0.2rem 0.85rem;margin-bottom:0.9rem;">
+            <span style="width:7px;height:7px;background:#4ade80;border-radius:50%;flex-shrink:0;"></span>
+            <span style="color:#E9D5FF;font-size:0.78rem;">Assistente Psicopedagógica Virtual · Online</span>
+        </div>
+        <h1>Conheça a Bia</h1>
+        <p style="color:#EDE9FE;font-size:0.85rem;margin:0.3rem 0 0;opacity:0.8;letter-spacing:0.01em;">
+            Passos Mágicos · Apoio educacional disponível 24h
+        </p>
+        <a class="bia-cta-btn" href="{BOT_URL}" target="_blank">Fale com a Bia →</a>
     </div>
-    <p style="color:#EDE9FE;font-size:0.82rem;margin:0;opacity:0.75;">
-        Passos Mágicos · Apoio educacional disponível 24h
-    </p>
-    <a class="bia-cta-btn" href="{BOT_URL}" target="_blank">Fale com a Bia →</a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -119,52 +137,45 @@ st.divider()
 st.markdown("### Como a Bia funciona")
 
 _CARDS = [
-    # (emoji, título, texto, cor_borda, cor_h4)
     ("🙅", "Anti-despejo de indicadores",
      "A Bia nunca lista os números do aluno em bloco. Ela usa os indicadores (IAN, INDE, IEG…) "
      "como bússola interna, traduzindo-os em conversa acolhedora, sem transformar a interação "
-     "em um relatório frio de dados.",
-     "#7C3AED", "#7C3AED"),
+     "em um relatório frio de dados."),
 
     ("🆘", "Protocolo de crise emocional",
      "Ao detectar sinais de sofrimento intenso ou risco, a Bia entra no Estado de Crise: "
      "interrompe qualquer pauta acadêmica, valida o sentimento do aluno e oferece o contato "
-     "do CVV (188), priorizando o acolhimento humano acima de qualquer encaminhamento educacional.",
-     "#DC2626", "#DC2626"),
+     "do CVV (188), priorizando o acolhimento humano acima de qualquer encaminhamento educacional."),
 
     ("🆔", "Personalização por RA",
      "Ao informar o número de matrícula (ex.: RA-42), a Bia consulta a base Supabase e acessa "
      "os indicadores reais do aprendiz: fase, INDE, pedra, IAN, IDA, IEG e mais, sem precisar "
-     "que o aluno informe nenhum dado acadêmico manualmente.",
-     "#2563EB", "#2563EB"),
+     "que o aluno informe nenhum dado acadêmico manualmente."),
 
     ("🧠", "Memória de sessão contextual",
      "Cada conversa mantém contexto de até 20 mensagens via Redis, permitindo que a Bia retome "
      "o fio da conversa sem perguntar as mesmas coisas repetidamente, "
-     "a continuidade é parte do cuidado.",
-     "#8B5CF6", "#8B5CF6"),
+     "a continuidade é parte do cuidado."),
 
     ("📚", "Respostas baseadas em RAG",
      "Toda descrição de programa institucional (Construindo Sonhos, Speed Up, Vem Ser…) "
      "vem exclusivamente da base de conhecimento Pinecone, alimentada pelo Relatório de "
-     "Atividades 2025 e pelo Código de Ética da ONG. A Bia nunca improvisa detalhes institucionais.",
-     "#059669", "#059669"),
+     "Atividades 2025 e pelo Código de Ética da ONG. A Bia nunca improvisa detalhes institucionais."),
 
     ("🔀", "Redirecionamento gentil fora do escopo",
      "Perguntas não relacionadas à jornada educacional (Copa do Mundo, receitas, política…) "
      "são redirecionadas com leveza para o foco psicopedagógico, sem rejeitar o aluno, "
-     "mas mantendo o propósito do canal.",
-     "#D97706", "#D97706"),
+     "mas mantendo o propósito do canal."),
 ]
 
 c1, c2 = st.columns(2, gap="large")
-for i, (icon, title, text, border, h4color) in enumerate(_CARDS):
+for i, (icon, title, text) in enumerate(_CARDS):
     col = c1 if i % 2 == 0 else c2
     with col:
         st.markdown(f"""
-        <div class="bia-card" style="border-top:4px solid {border};">
+        <div class="bia-card" style="border-top:4px solid #7C3AED;">
             <div class="icon" style="text-align:center;">{icon}</div>
-            <h4 style="color:{h4color};text-align:center;">{title}</h4>
+            <h4 style="color:#374151;text-align:center;">{title}</h4>
             <p>{text}</p>
         </div>
         """, unsafe_allow_html=True)
