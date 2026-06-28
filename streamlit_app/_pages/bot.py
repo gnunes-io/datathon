@@ -10,9 +10,9 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 BOT_URL = "https://passos-magicos-html.vercel.app/"
 
-_ASSETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
-_INTRO_IMG  = os.path.join(_ASSETS, 'bia_intro.png')
-_ARCH_IMG   = os.path.join(_ASSETS, 'Arquitetura_Bia.png')
+_ASSETS    = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
+_INTRO_IMG = os.path.join(_ASSETS, 'bia_intro.png')
+_ARCH_IMG  = os.path.join(_ASSETS, 'Arquitetura_Bia.png')
 
 # ── CSS: tema lavanda da Bia ──────────────────────────────────────────────────
 st.markdown("""
@@ -26,6 +26,7 @@ st.markdown("""
 }
 .bia-hero h1  { color: #fff; font-size: 2rem; margin: 0 0 0.35rem; font-weight: 800; }
 .bia-hero .sub { color: #E9D5FF; font-size: 0.9rem; margin: 0; }
+
 .bia-cta-btn {
     display: inline-block;
     background: rgba(255,255,255,0.95);
@@ -38,14 +39,37 @@ st.markdown("""
     margin-top: 1.35rem;
     box-shadow: 0 2px 12px rgba(0,0,0,0.18);
     letter-spacing: 0.01em;
-    transition: opacity 0.15s;
 }
-.bia-cta-btn:hover { opacity: 0.9; }
 
-.section-hdr  { color: #7C3AED !important; border-bottom-color: #C4B5FD !important; }
-.step-card    { border-top-color: #7C3AED !important; }
-.step-card h4 { color: #7C3AED !important; }
+/* feature cards: inline styles por card, não usa .step-card global */
+.bia-card {
+    background: white;
+    border-radius: 14px;
+    padding: 1.5rem 1.2rem 1.35rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom: 1.1rem;
+    height: 100%;
+}
+.bia-card .icon { font-size: 2rem; margin-bottom: 0.6rem; }
+.bia-card h4    { font-size: 0.95rem; font-weight: 700; margin: 0 0 0.5rem; }
+.bia-card p     { color: #64748B; font-size: 0.82rem; margin: 0; line-height: 1.55; }
 
+/* carousel placeholder */
+.bia-carousel { display:flex; gap:1rem; overflow-x:auto; padding:0.4rem 0.1rem 1rem;
+                scrollbar-width: thin; scrollbar-color: #C4B5FD transparent; }
+.bia-carousel::-webkit-scrollbar { height: 4px; }
+.bia-carousel::-webkit-scrollbar-thumb { background: #C4B5FD; border-radius: 2px; }
+.bia-ph-card {
+    flex-shrink: 0; width: 260px; height: 165px;
+    background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+    border-radius: 12px; border: 1px solid #C4B5FD;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 0.4rem;
+}
+.bia-ph-card span.ph-icon { font-size: 2rem; }
+.bia-ph-card span.ph-lbl  { font-size: 0.75rem; color: #7C3AED; font-weight: 600; }
+
+/* section headers */
 [data-testid="stMarkdown"] h3 { color: #6D28D9; }
 hr { border-color: #E9D5FF !important; }
 </style>
@@ -91,77 +115,59 @@ mas chegando antes delas.
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ── Como a Bia funciona ───────────────────────────────────────────────────────
+# ── Como a Bia funciona — cards com cores distintas ───────────────────────────
 st.markdown("### Como a Bia funciona")
 
+_CARDS = [
+    # (emoji, título, texto, cor_borda, cor_h4)
+    ("🙅", "Anti-despejo de indicadores",
+     "A Bia nunca lista os números do aluno em bloco. Ela usa os indicadores (IAN, INDE, IEG…) "
+     "como bússola interna, traduzindo-os em conversa acolhedora, sem transformar a interação "
+     "em um relatório frio de dados.",
+     "#7C3AED", "#7C3AED"),
+
+    ("🆘", "Protocolo de crise emocional",
+     "Ao detectar sinais de sofrimento intenso ou risco, a Bia entra no Estado de Crise: "
+     "interrompe qualquer pauta acadêmica, valida o sentimento do aluno e oferece o contato "
+     "do CVV (188), priorizando o acolhimento humano acima de qualquer encaminhamento educacional.",
+     "#DC2626", "#DC2626"),
+
+    ("🆔", "Personalização por RA",
+     "Ao informar o número de matrícula (ex.: RA-42), a Bia consulta a base Supabase e acessa "
+     "os indicadores reais do aprendiz: fase, INDE, pedra, IAN, IDA, IEG e mais, sem precisar "
+     "que o aluno informe nenhum dado acadêmico manualmente.",
+     "#2563EB", "#2563EB"),
+
+    ("🧠", "Memória de sessão contextual",
+     "Cada conversa mantém contexto de até 20 mensagens via Redis, permitindo que a Bia retome "
+     "o fio da conversa sem perguntar as mesmas coisas repetidamente, "
+     "a continuidade é parte do cuidado.",
+     "#8B5CF6", "#8B5CF6"),
+
+    ("📚", "Respostas baseadas em RAG",
+     "Toda descrição de programa institucional (Construindo Sonhos, Speed Up, Vem Ser…) "
+     "vem exclusivamente da base de conhecimento Pinecone, alimentada pelo Relatório de "
+     "Atividades 2025 e pelo Código de Ética da ONG. A Bia nunca improvisa detalhes institucionais.",
+     "#059669", "#059669"),
+
+    ("🔀", "Redirecionamento gentil fora do escopo",
+     "Perguntas não relacionadas à jornada educacional (Copa do Mundo, receitas, política…) "
+     "são redirecionadas com leveza para o foco psicopedagógico, sem rejeitar o aluno, "
+     "mas mantendo o propósito do canal.",
+     "#D97706", "#D97706"),
+]
+
 c1, c2 = st.columns(2, gap="large")
-
-with c1:
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">🙅</div>
-        <h4>Anti-despejo de indicadores</h4>
-        <p>A Bia nunca lista os números do aluno em bloco.
-           Ela usa os indicadores (IAN, INDE, IEG…) como bússola interna,
-           traduzindo-os em conversa acolhedora, sem transformar a interação
-           em um relatório frio de dados.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">🆔</div>
-        <h4>Personalização por RA</h4>
-        <p>Ao informar o número de matrícula (ex.: RA-42), a Bia consulta
-           a base Supabase e acessa os indicadores reais do aprendiz:
-           fase, INDE, pedra, IAN, IDA, IEG e mais, sem precisar que o aluno
-           informe nenhum dado acadêmico manualmente.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">📚</div>
-        <h4>Respostas baseadas em RAG</h4>
-        <p>Toda descrição de programa institucional (Construindo Sonhos,
-           Speed Up, Vem Ser…) vem exclusivamente da base de conhecimento Pinecone,
-           alimentada pelo Relatório de Atividades 2025 e pelo Código de Ética da ONG.
-           A Bia nunca improvisa detalhes institucionais.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c2:
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">🆘</div>
-        <h4>Protocolo de crise emocional</h4>
-        <p>Ao detectar sinais de sofrimento intenso ou risco, a Bia entra no
-           Estado de Crise: interrompe qualquer pauta acadêmica, valida o sentimento
-           do aluno e oferece o contato do CVV (188), priorizando o acolhimento
-           humano acima de qualquer encaminhamento educacional.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">🧠</div>
-        <h4>Memória de sessão contextual</h4>
-        <p>Cada conversa mantém contexto de até 20 mensagens via Redis,
-           permitindo que a Bia retome o fio da conversa sem perguntar as
-           mesmas coisas repetidamente, a continuidade é parte do cuidado.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="step-card">
-        <div style="font-size:2rem;">🔀</div>
-        <h4>Redirecionamento gentil fora do escopo</h4>
-        <p>Perguntas não relacionadas à jornada educacional (Copa do Mundo,
-           receitas, política…) são redirecionadas com leveza para o foco
-           psicopedagógico, sem rejeitar o aluno, mas mantendo o propósito
-           do canal.</p>
-    </div>
-    """, unsafe_allow_html=True)
+for i, (icon, title, text, border, h4color) in enumerate(_CARDS):
+    col = c1 if i % 2 == 0 else c2
+    with col:
+        st.markdown(f"""
+        <div class="bia-card" style="border-top:4px solid {border};">
+            <div class="icon" style="text-align:center;">{icon}</div>
+            <h4 style="color:{h4color};text-align:center;">{title}</h4>
+            <p>{text}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
@@ -179,16 +185,44 @@ if os.path.exists(_ARCH_IMG):
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ── CTA final ─────────────────────────────────────────────────────────────────
-st.markdown("### Experimente agora")
-st.markdown(
-    "Informe seu **RA** (ex.: `RA-42`) para que a Bia possa personalizar o atendimento, "
-    "ou faça uma pergunta livre sobre os programas da Passos Mágicos."
-)
+# ── Galeria — carrossel placeholder ───────────────────────────────────────────
+st.markdown("### 📸 Galeria")
+st.caption("Em breve: registros do desenvolvimento, apresentações e bastidores do projeto.")
+
+_PH_ITEMS = [
+    ("📷", "Desenvolvimento"),
+    ("👥", "Nossa Equipe"),
+    ("🎤", "Apresentação"),
+    ("🏫", "Passos Mágicos"),
+    ("💻", "Tech Hub"),
+]
+ph_html = "".join(f"""
+    <div class="bia-ph-card">
+        <span class="ph-icon">{icon}</span>
+        <span class="ph-lbl">{label}</span>
+    </div>""" for icon, label in _PH_ITEMS)
+
+st.markdown(f'<div class="bia-carousel">{ph_html}</div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.divider()
+
+# ── CTA final destacado ───────────────────────────────────────────────────────
 st.markdown(f"""
-<a class="bia-cta-btn" href="{BOT_URL}" target="_blank"
-   style="display:block; text-align:center; margin-top:0.75rem;">
-    Abrir a Bia →
-</a>
-<br>
+<div style="background:linear-gradient(135deg,#7C3AED 0%,#4C1D95 100%);
+            border-radius:16px; padding:2.5rem 2rem; text-align:center; margin:0.5rem 0 1.5rem;">
+    <h3 style="color:white; font-size:1.6rem; margin:0 0 0.6rem; font-weight:800;">
+        Experimente agora
+    </h3>
+    <p style="color:#E9D5FF; font-size:0.9rem; margin:0 auto 1.5rem; max-width:480px; line-height:1.6;">
+        Informe seu <strong style="color:white;">RA</strong> (ex.: RA-42) para que a Bia possa
+        personalizar o atendimento, ou faça uma pergunta livre sobre os programas da Passos Mágicos.
+    </p>
+    <a href="{BOT_URL}" target="_blank"
+       style="display:inline-block; background:rgba(255,255,255,0.95); color:#6D28D9;
+              padding:0.75rem 3rem; border-radius:10px; font-weight:700; font-size:1rem;
+              text-decoration:none; box-shadow:0 4px 16px rgba(0,0,0,0.22);">
+        Fale com a Bia →
+    </a>
+</div>
 """, unsafe_allow_html=True)
