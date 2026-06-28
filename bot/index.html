@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bia · Assistente Psicopedagógica — Passos Mágicos</title>
+  <title>Bia · Assistente Psicopedagógica, Passos Mágicos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -127,7 +127,7 @@
 
   <!-- ══ Script ═══════════════════════════════════════════════════════════════ -->
   <script>
-  // Identificador único da sessão — gerado uma vez por carregamento de página
+  // Identificador único da sessão, gerado uma vez por carregamento de página
   const SESSION_ID = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -144,7 +144,7 @@
 
   const WELCOME_MESSAGE =
     `Olá! Eu sou a **Bia**, sua assistente psicopedagógica da Passos Mágicos 🌟\n\n` +
-    `Estou aqui para te apoiar na sua jornada de aprendizado — seja para entender seus indicadores, ` +
+    `Estou aqui para te apoiar na sua jornada de aprendizado, seja para entender seus indicadores, ` +
     `descobrir programas disponíveis ou conversar sobre os seus estudos.\n\n` +
     `Para personalizar o atendimento, poderia me informar o seu **RA (Registro do Aluno)**? ` +
     `Você encontra esse número na carteirinha ou pode pedir à coordenação. 😊`;
@@ -235,10 +235,10 @@
     const lower = text.toLowerCase();
 
     if (lower.includes('inde'))
-      return '**INDE** é o Índice de Desenvolvimento Educacional — a nota geral que resume seu crescimento no programa (escala 0–10).\n\nEle considera seu desempenho, engajamento e bem-estar. Quanto maior, melhor está seu desenvolvimento! 🌟\n\n*Estou sem conexão no momento, mas posso responder mais perguntas assim que voltar.*';
+      return '**INDE** é o Índice de Desenvolvimento Educacional, a nota geral que resume seu crescimento no programa (escala 0–10).\n\nEle considera seu desempenho, engajamento e bem-estar. Quanto maior, melhor está seu desenvolvimento! 🌟\n\n*Estou sem conexão no momento, mas posso responder mais perguntas assim que voltar.*';
 
     if (lower.includes('pedra') || lower.includes('quartzo') || lower.includes('topázio'))
-      return 'As **Pedras** são a classificação pelo INDE:\n- 🔴 **Quartzo** (< 5,5): fase de atenção\n- 🟠 **Ágata** (5,5–7,0): em desenvolvimento\n- 🔵 **Ametista** (7,0–8,5): bom progresso\n- 🟢 **Topázio** (≥ 8,5): excelência!\n\n*Sem conexão agora — tente novamente em instantes.*';
+      return 'As **Pedras** são a classificação pelo INDE:\n- 🔴 **Quartzo** (< 5,5): fase de atenção\n- 🟠 **Ágata** (5,5–7,0): em desenvolvimento\n- 🔵 **Ametista** (7,0–8,5): bom progresso\n- 🟢 **Topázio** (≥ 8,5): excelência!\n\n*Sem conexão agora. Tente novamente em instantes.*';
 
     if (lower.includes('ra') || lower.includes('registro'))
       return 'Seu **RA (Registro do Aluno)** é o número que identifica você no programa. Você encontra na sua carteirinha ou pode pedir à coordenação da Passos Mágicos! 😊\n\n*Estou com dificuldade de conexão agora. Tente novamente em breve.*';

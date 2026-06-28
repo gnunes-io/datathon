@@ -1,4 +1,4 @@
-"""Página Quick Insights — panorama analítico dos dados da Passos Mágicos."""
+"""Página Quick Insights, panorama analítico dos dados da Passos Mágicos."""
 import os
 import sys
 import re as _re
@@ -73,7 +73,7 @@ def _load_year(path, ano):
     df['Defasagem'] = pd.to_numeric(
         df.get('Defasagem', df.get('Defas', np.nan)), errors='coerce'
     )
-    # composite target — alinhado ao modelo preditivo
+    # composite target, alinhado ao modelo preditivo
     df['target']           = ((df['Defasagem'] >= 1) | (df['INDE'] < 5.5)).astype(float)
     df['defasagem_formal'] = (df['Defasagem'] >= 1).astype(float)
     genero_col = next((c for c in df.columns if 'n' in c.lower() and 'nero' in c.lower()), None)
@@ -119,7 +119,7 @@ def _insight(html: str):
 st.markdown("""
 <div class="pm-hero">
     <h1>📊 Quick Insights</h1>
-    <p>Panorama analítico dos aprendizes da Passos Mágicos — 2022 a 2024</p>
+    <p>Panorama analítico dos aprendizes da Passos Mágicos, 2022 a 2024</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -156,7 +156,7 @@ m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Alunos no período",    f"{len(dff):,}".replace(",", "."))
 m2.metric("INDE médio",           f"{inde_medio:.2f}")
 m3.metric("Risco composto",       f"{taxa_risco:.1%}",
-          help="Defasagem ≥ 1 ano OU INDE < 5,5 — alinhado ao target do modelo")
+          help="Defasagem ≥ 1 ano OU INDE < 5,5, alinhado ao target do modelo")
 m4.metric("Defasagem formal",     f"{taxa_def_formal:.1%}",
           help="Alunos cursando fase abaixo da esperada para a idade")
 m5.metric("Pedra mais frequente", str(pedra_mais))
@@ -164,7 +164,7 @@ m5.metric("Pedra mais frequente", str(pedra_mais))
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 2. CRESCIMENTO — alunos por ano
+# 2. CRESCIMENTO, alunos por ano
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">Crescimento do programa</p>', unsafe_allow_html=True)
 
@@ -208,13 +208,13 @@ _pct_cr = (contagem['Alunos'].iloc[-1] / contagem['Alunos'].iloc[0] - 1) * 100
 _insight(
     f"O programa cresceu <strong>{_pct_cr:.0f}%</strong> entre 2022 e 2024 "
     f"({contagem['Alunos'].iloc[0]:,} → {contagem['Alunos'].iloc[-1]:,} alunos). "
-    "O relatório 2025 registra 1.200 aprendizes — a trajetória de crescimento é consistente."
+    "O relatório 2025 registra 1.200 aprendizes, a trajetória de crescimento é consistente."
 )
 
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 3. PEDRAS POR ANO — volume absoluto
+# 3. PEDRAS POR ANO, volume absoluto
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">Distribuição das Pedras por ano</p>', unsafe_allow_html=True)
 
@@ -255,10 +255,10 @@ if len(quartz) >= 2:
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 4. TAXA DE DEFASAGEM — por ano e por fase
+# 4. TAXA DE DEFASAGEM, por ano e por fase
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">Taxa de risco de defasagem</p>', unsafe_allow_html=True)
-st.caption("Risco composto: defasagem formal (≥ 1 ano) **ou** INDE < 5,5 — alinhado ao target do modelo preditivo.")
+st.caption("Risco composto: defasagem formal (≥ 1 ano) **ou** INDE < 5,5, alinhado ao target do modelo preditivo.")
 
 tab_ano, tab_fase = st.tabs(["Por ano", "Por fase"])
 
@@ -288,7 +288,7 @@ with tab_ano:
     _insight(
         f"A taxa de risco composta <strong>{'reduziu' if dr < 0 else 'cresceu'} "
         f"{abs(dr):.1f} p.p.</strong> entre 2022 e 2024. "
-        "Lembre que o risco composto inclui alunos com INDE < 5,5 mesmo sem defasagem formal — "
+        "Lembre que o risco composto inclui alunos com INDE < 5,5 mesmo sem defasagem formal, "
         "em média mais restritivo do que a defasagem isolada."
     )
 
@@ -330,19 +330,19 @@ with tab_fase:
     bot_nome = 'Alfa' if int(bot_f['Fase']) == 0 else f"Fase {int(bot_f['Fase'])}"
     _insight(
         f"<strong>{top_nome}</strong> concentra a maior taxa de risco "
-        f"({top_f['Taxa %']:.0f}% — {int(top_f['Risco'])} de {int(top_f['Total'])} alunos). "
+        f"({top_f['Taxa %']:.0f}%, {int(top_f['Risco'])} de {int(top_f['Total'])} alunos). "
         f"<strong>{bot_nome}</strong> tem a menor ({bot_f['Taxa %']:.0f}%). "
-        "Considere cruzar taxa com volume total por fase para priorizar intervenções — "
+        "Considere cruzar taxa com volume total por fase para priorizar intervenções, "
         "alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
     )
 
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 5. INDE MÉDIO POR FASE — escala 4–8
+# 5. INDE MÉDIO POR FASE, escala 4–8
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">INDE médio por fase escolar</p>', unsafe_allow_html=True)
-st.caption("Fases 8 e 9 não possuem INDE registrado nos dados 2022–2024 — alunos existem mas o campo está em branco na fonte.")
+st.caption("Fases 8 e 9 não possuem INDE registrado nos dados 2022–2024, alunos existem mas o campo está em branco na fonte.")
 
 inde_fase = (dff[dff['INDE'].notna() & dff['Fase'].notna()]
              .groupby(['Fase', 'ano'])['INDE']
@@ -363,7 +363,7 @@ fig_if.add_hline(y=5.5, line_dash='dot', line_color='#DC2626', line_width=1.5,
 fig_if.add_hline(y=7.0, line_dash='dot', line_color='#3B82F6', line_width=1.5,
                  annotation_text='Ágata ↔ Ametista (7,0)', annotation_position='top right',
                  annotation_font_size=10)
-# Ametista | Topázio threshold (8.5) is above the zoom range (4–8) — omitted intentionally
+# Ametista | Topázio threshold (8.5) is above the zoom range (4–8), omitted intentionally
 fig_if.add_hrect(y0=4,   y1=5.5, fillcolor='rgba(220,38,38,0.05)',  line_width=0)
 fig_if.add_hrect(y0=5.5, y1=7.0, fillcolor='rgba(59,130,246,0.04)', line_width=0)
 fig_if.add_hrect(y0=7.0, y1=8.0, fillcolor='rgba(139,92,246,0.04)', line_width=0)
@@ -378,7 +378,7 @@ st.plotly_chart(fig_if, use_container_width=True)
 
 _insight(
     "O zoom em 4–8 revela variações que a escala 0–10 mascara. "
-    "Fases com INDE médio próximo de 5,5 são as mais vulneráveis a uma queda para Quartzo — "
+    "Fases com INDE médio próximo de 5,5 são as mais vulneráveis a uma queda para Quartzo, "
     "uma variação de 0,3 pontos pode definir a pedra do aluno. "
     "A linha vermelha pontilhada é o limiar crítico do modelo preditivo."
 )
@@ -386,9 +386,9 @@ _insight(
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 6. SCATTER — Engajamento × Desempenho (2024 apenas)
+# 6. SCATTER, Engajamento × Desempenho (2024 apenas)
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Engajamento × Desempenho acadêmico — 2024</p>',
+st.markdown('<p class="section-hdr">Engajamento × Desempenho acadêmico, 2024</p>',
             unsafe_allow_html=True)
 st.caption("Cada ponto é um aluno de 2024. As linhas marcam as medianas, formando 4 quadrantes de intervenção.")
 
@@ -401,7 +401,7 @@ if not dff_sc.empty:
         opacity=0.55,
         color_discrete_map=PEDRA_COLORS,
         category_orders={'Pedra': PEDRA_ORDER},
-        labels={'IEG': 'IEG — Engajamento', 'IDA': 'IDA — Desempenho Acadêmico'},
+        labels={'IEG': 'IEG, Engajamento', 'IDA': 'IDA, Desempenho Acadêmico'},
         hover_data={'RA': True, 'Fase': True, 'INDE': ':.2f'},
         custom_data=['RA', 'Fase', 'INDE', 'Pedra'],
     )
@@ -450,18 +450,18 @@ if not dff_sc.empty:
     pct_baixo = _nq1 / len(dff_sc) * 100
     _insight(
         f"<strong>{pct_baixo:.0f}% dos alunos de 2024</strong> ({_nq1} alunos) estão abaixo da mediana "
-        "nos dois eixos — prioridade máxima de intervenção multidimensional. "
+        "nos dois eixos, prioridade máxima de intervenção multidimensional. "
         f"Outros <strong>{_nq4}</strong> alunos têm bom engajamento mas desempenho abaixo da mediana: "
-        "participam das atividades mas podem ter dificuldades específicas de aprendizado — "
+        "participam das atividades mas podem ter dificuldades específicas de aprendizado, "
         "indicado para avaliação psicopedagógica (IPP)."
     )
 
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 7. FUNIL DE RISCO POR FASE — taxa + volume
+# 7. FUNIL DE RISCO POR FASE, taxa + volume
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Funil de risco por fase — onde priorizar</p>',
+st.markdown('<p class="section-hdr">Funil de risco por fase, onde priorizar</p>',
             unsafe_allow_html=True)
 
 rf2 = (dff[dff['Fase'].notna() & dff['target'].notna()]
@@ -513,16 +513,16 @@ _fn = lambda f: 'Alfa' if int(f) == 0 else f"Fase {int(f)}"
 _insight(
     f"<strong>{_fn(fase_max['Fase'])}</strong> tem a maior taxa de risco ({fase_max['Taxa %']:.0f}%). "
     f"Mas <strong>{_fn(fase_max_vol['Fase'])}</strong> tem o maior volume absoluto de alunos em risco "
-    f"({int(fase_max_vol['Taxa %'] * fase_max_vol['n'] / 100):.0f} alunos) — "
+    f"({int(fase_max_vol['Taxa %'] * fase_max_vol['n'] / 100):.0f} alunos), "
     "alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
 )
 
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 8. DISTRIBUIÇÃO DO INDE — histograma com limiares
+# 8. DISTRIBUIÇÃO DO INDE, histograma com limiares
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Distribuição do INDE — onde os alunos se concentram</p>',
+st.markdown('<p class="section-hdr">Distribuição do INDE, onde os alunos se concentram</p>',
             unsafe_allow_html=True)
 
 anos_hist = st.multiselect(
@@ -557,7 +557,7 @@ fig_hist.update_layout(
 st.plotly_chart(fig_hist, use_container_width=True)
 
 _insight(
-    "Observe os picos próximos às linhas verticais — esses são os 'near misses'. "
+    "Observe os picos próximos às linhas verticais, esses são os 'near misses'. "
     "Alunos levemente abaixo de 5,5 são os que mais se beneficiam de uma intervenção focada. "
     "Se a curva do ano mais recente se deslocou para a direita, o programa está elevando o INDE do grupo como um todo."
 )
@@ -606,7 +606,7 @@ if len(corr_cols) >= 2:
         inde_insight = ""
     _insight(
         f"Par mais correlacionado: <strong>{pair[0]} × {pair[1]}</strong> (r = {r_val:.2f}).{inde_insight} "
-        "Indicadores com correlação baixa entre si precisam ser monitorados de forma independente — "
+        "Indicadores com correlação baixa entre si precisam ser monitorados de forma independente, "
         "um aluno pode ter bom desempenho acadêmico e saúde psicossocial comprometida (e vice-versa)."
     )
 

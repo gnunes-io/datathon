@@ -1,4 +1,4 @@
-"""Página PDF Executivo — redirect para o documento."""
+"""Página PDF Executivo, redirect para o documento."""
 import os
 import sys
 import streamlit as st
@@ -8,7 +8,7 @@ from utils import GLOBAL_CSS, PM_BLUE, PM_GOLD
 
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
-PDF_URL = "https://google.com"  # placeholder — substituir pela URL do PDF em produção
+PDF_URL = "https://google.com"  # placeholder, substituir pela URL do PDF em produção
 
 st.markdown("""
 <div class="pm-hero">

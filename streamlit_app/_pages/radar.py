@@ -1,4 +1,4 @@
-"""Página Radar de Risco — avaliação individual com SHAP."""
+"""Página Radar de Risco, avaliação individual com SHAP."""
 import os
 import sys
 import numpy as np
@@ -49,7 +49,7 @@ if 'historico' not in st.session_state:
 st.markdown("""
 <div class="pm-hero">
     <h1>🎯 Radar de Risco</h1>
-    <p>Preencha os indicadores do aluno — o resultado é calculado automaticamente</p>
+    <p>Preencha os indicadores do aluno, o resultado é calculado automaticamente</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -59,7 +59,7 @@ st.markdown("""
 form_col, result_col = st.columns([1.1, 0.9], gap="large")
 
 with form_col:
-    # Identificação — só Fase
+    # Identificação, só Fase
     st.markdown('<p class="section-hdr">Identificação</p>', unsafe_allow_html=True)
     _FASE_OPTS = ['Alfa (0)', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     _FASE_VALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -81,14 +81,14 @@ with form_col:
 
     ac1, ac2 = st.columns(2)
     with ac1:
-        ian  = num_input("IAN — Adequação de Nível", "ian", "IAN",
+        ian  = num_input("IAN, Adequação de Nível", "ian", "IAN",
                          "Mede se o aluno está no nível adequado para a fase")
-        ieg  = num_input("IEG — Engajamento", "ieg", "IEG",
+        ieg  = num_input("IEG, Engajamento", "ieg", "IEG",
                          "Frequência, participação e comportamento")
     with ac2:
-        ida  = num_input("IDA — Desempenho Acadêmico", "ida", "IDA",
+        ida  = num_input("IDA, Desempenho Acadêmico", "ida", "IDA",
                          "Média em Matemática, Português e Inglês")
-        inde = num_input("INDE — Índice Geral", "inde", "INDE",
+        inde = num_input("INDE, Índice Geral", "inde", "INDE",
                          "Índice global de desenvolvimento educacional")
 
     # Pedra auto-calculada a partir do INDE
@@ -107,17 +107,17 @@ with form_col:
 
     ps1, ps2 = st.columns(2)
     with ps1:
-        iaa = num_input("IAA — Autoavaliação", "iaa", "IAA",
+        iaa = num_input("IAA, Autoavaliação", "iaa", "IAA",
                         "Como o aluno avalia seu próprio progresso")
-        ips = num_input("IPS — Psicossocial", "ips", "IPS",
+        ips = num_input("IPS, Psicossocial", "ips", "IPS",
                         "Aspectos emocionais e relacionamentos sociais")
     with ps2:
-        ipv = num_input("IPV — Ponto de Virada", "ipv", "IPV",
+        ipv = num_input("IPV, Ponto de Virada", "ipv", "IPV",
                         "Indica transformação na trajetória do aluno")
-        ipp = num_input("IPP — Psicopedagógico", "ipp_val", "IPS",
-                        "Avaliação psicopedagógica — disponível a partir de 2023 (deixe na média se não houver)")
+        ipp = num_input("IPP, Psicopedagógico", "ipp_val", "IPS",
+                        "Avaliação psicopedagógica, disponível a partir de 2023 (deixe na média se não houver)")
 
-# ── Coluna DIREITA — resultado ─────────────────────────────────────────────────
+# ── Coluna DIREITA, resultado ──────────────────────────────────────────────────
 with result_col:
     feats = build_features(ian, ida, ieg, iaa, ips, ipp, ipv, inde, fase,
                            'Não informado', pedra)
@@ -207,7 +207,7 @@ with result_col:
         st.success(f"'{label}' salvo no histórico.")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GRÁFICOS — radar + SHAP
+# GRÁFICOS, radar + SHAP
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("---")
 viz_radar, viz_shap = st.columns([1, 1], gap="large")
@@ -329,11 +329,11 @@ _IND_VALUES = {
 # Ações críticas por indicador (referenciando programas reais da ONG)
 _IND_ACTIONS = {
     'INDE': "Acionar coordenação pedagógica e equipe multiprofissional para plano de suporte integrado",
-    'IAN':  "Programa **Construindo Sonhos** — reforço intensivo de Português e Matemática para nivelamento",
+    'IAN':  "Programa **Construindo Sonhos**, reforço intensivo de Português e Matemática para nivelamento",
     'IDA':  "Atividades lúdicas de Matemática (fins de semana com voluntários) · **Speed Up** de Inglês se aplicável",
-    'IEG':  "**Passos na Sua Casa** (visita domiciliar) · **Café em Família** — investigar contexto sociofamiliar",
+    'IEG':  "**Passos na Sua Casa** (visita domiciliar) · **Café em Família**, investigar contexto sociofamiliar",
     'IAA':  "Encaminhar ao programa de Psicologia da fase · **Exploradores do Saber** (F3) · **Jornada das Emoções** (F4)",
-    'IPS':  "Serviço Social — agendar entrevista social · **Passos em Família** (56 encontros/ano disponíveis)",
+    'IPS':  "Serviço Social, agendar entrevista social · **Passos em Família** (56 encontros/ano disponíveis)",
     'IPP':  "Psicopedagogia: **Heróis da Educação** (Alfa) · **Guardiões do Saber** (F1) · **Sabedoria em Ação** (F2)",
     'IPV':  "Psicologia: **Ponto de Virada** (F8) · **Eu no Comando** (F7) · reforçar perspectiva de futuro e carreira",
 }
@@ -362,14 +362,14 @@ def _action_for_fase(ind: str, fase: int) -> str:
     return ""
 
 _IND_LABELS_PT = {
-    'INDE': 'INDE — Índice Geral',
-    'IAN':  'IAN — Adequação de Nível',
-    'IDA':  'IDA — Desempenho Acadêmico',
-    'IEG':  'IEG — Engajamento',
-    'IAA':  'IAA — Autoavaliação',
-    'IPS':  'IPS — Psicossocial',
-    'IPP':  'IPP — Psicopedagógico',
-    'IPV':  'IPV — Ponto de Virada',
+    'INDE': 'INDE, Índice Geral',
+    'IAN':  'IAN, Adequação de Nível',
+    'IDA':  'IDA, Desempenho Acadêmico',
+    'IEG':  'IEG, Engajamento',
+    'IAA':  'IAA, Autoavaliação',
+    'IPS':  'IPS, Psicossocial',
+    'IPP':  'IPP, Psicopedagógico',
+    'IPV':  'IPV, Ponto de Virada',
 }
 
 criticos  = []  # val < 5.0
@@ -394,14 +394,14 @@ with rec_col:
         st.success("✅ Todos os indicadores acima da média histórica")
     else:
         for ind, val, ref in criticos:
-            st.markdown(f"🔴 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(crítico < 5,0)*")
+            st.markdown(f"🔴 **{_IND_LABELS_PT[ind]}**, {val:.1f} *(crítico < 5,0)*")
             st.caption(_IND_ACTIONS[ind])
             extra = _action_for_fase(ind, fase)
             if extra:
                 st.caption(extra)
         for ind, val, ref in atencoes:
             st.markdown(
-                f"🟡 **{_IND_LABELS_PT[ind]}** — {val:.1f} *(abaixo da média {ref:.1f})*"
+                f"🟡 **{_IND_LABELS_PT[ind]}**, {val:.1f} *(abaixo da média {ref:.1f})*"
             )
             extra = _action_for_fase(ind, fase)
             if extra:
@@ -419,7 +419,7 @@ with pos_col:
             'IAN':  "Boa adequação de nível",
             'IDA':  "Bom desempenho acadêmico",
             'IEG':  "Alto engajamento com atividades",
-            'IAA':  "Boa autoavaliação — aluno confiante",
+            'IAA':  "Boa autoavaliação, aluno confiante",
             'IPS':  "Bom indicador psicossocial",
             'IPP':  "Bom indicador psicopedagógico",
             'IPV':  "Próximo ou além do ponto de virada",

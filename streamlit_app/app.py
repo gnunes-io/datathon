@@ -1,4 +1,4 @@
-"""Entry point do app multipage — Passos Mágicos Tech Hub."""
+"""Entry point do app multipage, Passos Mágicos Tech Hub."""
 import os
 import sys
 import streamlit as st

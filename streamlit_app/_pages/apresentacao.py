@@ -1,4 +1,4 @@
-"""Página Vídeo Apresentação — em construção."""
+"""Página Vídeo Apresentação, em construção."""
 import os
 import sys
 import streamlit as st
@@ -11,7 +11,7 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 st.markdown("""
 <div class="pm-hero">
     <h1>🎬 Vídeo Apresentação</h1>
-    <p>Apresentação do projeto Passos Mágicos — Datathon FIAP 2024</p>
+    <p>Apresentação do projeto Passos Mágicos, Datathon FIAP 2024</p>
 </div>
 """, unsafe_allow_html=True)
 

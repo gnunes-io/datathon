@@ -1,4 +1,4 @@
-"""Página GitHub — redirect para o repositório."""
+"""Página GitHub, redirect para o repositório."""
 import os
 import sys
 import streamlit as st
@@ -8,12 +8,12 @@ from utils import GLOBAL_CSS, PM_BLUE, PM_GOLD
 
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
-GITHUB_URL = "https://google.com"  # placeholder — substituir pela URL do repo em produção
+GITHUB_URL = "https://google.com"  # placeholder, substituir pela URL do repo em produção
 
 st.markdown("""
 <div class="pm-hero">
     <h1>🐙 GitHub</h1>
-    <p>Repositório do projeto — código-fonte, notebooks e documentação</p>
+    <p>Repositório do projeto, código-fonte, notebooks e documentação</p>
 </div>
 """, unsafe_allow_html=True)
 

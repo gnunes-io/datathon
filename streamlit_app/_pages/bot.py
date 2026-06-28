@@ -1,4 +1,4 @@
-"""Página Assistente Psicopedagógico — Bia."""
+"""Página Assistente Psicopedagógico, Bia."""
 import os
 import sys
 import streamlit as st
@@ -13,7 +13,7 @@ BOT_URL = "https://passos-magicos-html.vercel.app/"
 # ── Hero ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="pm-hero">
-    <h1>💬 Bia — Assistente Psicopedagógica Virtual</h1>
+    <h1>💬 Bia, Assistente Psicopedagógica Virtual</h1>
     <p>Uma IA de apoio à jornada educacional dos aprendizes Passos Mágicos,
        disponível a qualquer hora, com escuta ativa e encaminhamentos personalizados.</p>
 </div>
@@ -37,12 +37,12 @@ st.divider()
 st.markdown("### Por que criamos a Bia?")
 st.markdown("""
 A equipe de Psicopedagogia da Passos Mágicos acompanha mais de **1.200 aprendizes**
-distribuídos entre Fase Alfa e Fase 10. Identificar quem precisa de atenção imediata —
-antes que a defasagem se consolide — é um desafio constante de tempo e escala.
+distribuídos entre Fase Alfa e Fase 10. Identificar quem precisa de atenção imediata,
+antes que a defasagem se consolide, é um desafio constante de tempo e escala.
 
 A **Bia** nasceu para ampliar esse alcance: um canal de escuta disponível 24h, capaz de
 acolher o aluno no momento em que ele sente a necessidade, coletar sinais de alerta e
-encaminhá-lo para o programa certo — sem substituir o olhar humano das psicopedagogas,
+encaminhá-lo para o programa certo, sem substituir o olhar humano das psicopedagogas,
 mas chegando antes delas.
 """)
 
@@ -61,7 +61,7 @@ with c1:
         <h4>Anti-despejo de indicadores</h4>
         <p>A Bia nunca lista os números do aluno em bloco.
            Ela usa os indicadores (IAN, INDE, IEG…) como bússola interna,
-           traduzindo-os em conversa acolhedora — sem transformar a interação
+           traduzindo-os em conversa acolhedora, sem transformar a interação
            em um relatório frio de dados.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -72,7 +72,7 @@ with c1:
         <h4>Personalização por RA</h4>
         <p>Ao informar o número de matrícula (ex.: RA-42), a Bia consulta
            a base Supabase e acessa os indicadores reais do aprendiz:
-           fase, INDE, pedra, IAN, IDA, IEG e mais — sem precisar que o aluno
+           fase, INDE, pedra, IAN, IDA, IEG e mais, sem precisar que o aluno
            informe nenhum dado acadêmico manualmente.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -95,7 +95,7 @@ with c2:
         <h4>Protocolo de crise emocional</h4>
         <p>Ao detectar sinais de sofrimento intenso ou risco, a Bia entra no
            Estado de Crise: interrompe qualquer pauta acadêmica, valida o sentimento
-           do aluno e oferece o contato do CVV (188) — priorizando o acolhimento
+           do aluno e oferece o contato do CVV (188), priorizando o acolhimento
            humano acima de qualquer encaminhamento educacional.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -106,7 +106,7 @@ with c2:
         <h4>Memória de sessão contextual</h4>
         <p>Cada conversa mantém contexto de até 20 mensagens via Redis,
            permitindo que a Bia retome o fio da conversa sem perguntar as
-           mesmas coisas repetidamente — a continuidade é parte do cuidado.</p>
+           mesmas coisas repetidamente, a continuidade é parte do cuidado.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -116,7 +116,7 @@ with c2:
         <h4>Redirecionamento gentil fora do escopo</h4>
         <p>Perguntas não relacionadas à jornada educacional (Copa do Mundo,
            receitas, política…) são redirecionadas com leveza para o foco
-           psicopedagógico — sem rejeitar o aluno, mas mantendo o propósito
+           psicopedagógico, sem rejeitar o aluno, mas mantendo o propósito
            do canal.</p>
     </div>
     """, unsafe_allow_html=True)

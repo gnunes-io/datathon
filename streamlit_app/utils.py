@@ -1,4 +1,4 @@
-"""Utilitários compartilhados — Passos Mágicos Radar de Risco."""
+"""Utilitários compartilhados, Passos Mágicos Radar de Risco."""
 import os
 import numpy as np
 import pandas as pd
@@ -132,7 +132,7 @@ def predict(payload, feats_dict):
             elif sv.ndim == 2:
                 if sv.shape[0] == 1:    # (1, features)
                     sv = sv[0]
-                elif sv.shape[1] == 2:  # (features, classes) — single sample
+                elif sv.shape[1] == 2:  # (features, classes), single sample
                     sv = sv[:, 1]
                 else:
                     sv = sv[0]

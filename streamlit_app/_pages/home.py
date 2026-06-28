@@ -1,4 +1,4 @@
-"""Página inicial — apresentação do projeto e onboarding do pedagogo."""
+"""Página inicial, apresentação do projeto e onboarding do pedagogo."""
 import os
 import sys
 import streamlit as st
@@ -17,7 +17,7 @@ with logo_col:
 
 st.markdown("""
 <div class="pm-hero">
-    <h1>Radar de Risco — Passos Mágicos</h1>
+    <h1>Radar de Risco, Passos Mágicos</h1>
     <p>Sistema de apoio à decisão para identificação precoce de alunos em risco de defasagem escolar</p>
 </div>
 """, unsafe_allow_html=True)
@@ -53,7 +53,7 @@ st.caption("O PAC é organizado em Fase Alfa (alfabetização) + Fases 1 a 9, co
 jor_cols = st.columns(6, gap="small")
 for col, etapa, desc in [
     (jor_cols[0], "🔤 Fase Alfa", "Alfabetização"),
-    (jor_cols[1], "📚 Fases 1–9", "PAC — aceleração do conhecimento"),
+    (jor_cols[1], "📚 Fases 1–9", "PAC, aceleração do conhecimento"),
     (jor_cols[2], "🏫 Bolsas Médio", "Arco-Íris, Einstein, FIAP School"),
     (jor_cols[3], "🎓 Vem Ser", "Prep. vestibular (Me Salva!)"),
     (jor_cols[4], "🏛️ Universidade", "119 universitários cursando/formados"),
@@ -114,12 +114,12 @@ if payload:
     m4.metric("Explicabilidade SHAP", "✅ Ativa" if has_shap else "⚠️ Gere o pkl",
               "fatores por aluno")
 else:
-    st.warning("Modelo não carregado — execute `model/modelo_preditivo.ipynb` para gerar o `.pkl`.")
+    st.warning("Modelo não carregado. Execute `model/modelo_preditivo.ipynb` para gerar o `.pkl`.")
 
 st.info(
     "**Como interpretar o risco:** O modelo identifica dois perfis: "
     "(1) aluno **formalmente atrasado de série** (Defasagem ≥ 1 ano) e "
-    "(2) aluno em **Quartzo** (INDE < 5,5 — pior faixa de desenvolvimento). "
+    "(2) aluno em **Quartzo** (INDE < 5,5, pior faixa de desenvolvimento). "
     "O threshold (61%) foi calibrado por Fbeta β=2: o sistema **prefere alertar** a deixar passar.",
     icon="ℹ️"
 )
@@ -129,10 +129,10 @@ st.markdown('<p class="section-hdr">O que cada indicador significa</p>', unsafe_
 st.caption("Clique para expandir cada indicador e ver a descrição completa.")
 
 for sigla, nome, descricao in INDICATORS:
-    with st.expander(f"**{sigla}** — {nome}"):
+    with st.expander(f"**{sigla}**, {nome}"):
         st.markdown(f"""
         <div class="ind-card">
-            <strong>{sigla} — {nome}</strong><br>
+            <strong>{sigla}, {nome}</strong><br>
             <small>{descricao}</small>
         </div>
         """, unsafe_allow_html=True)

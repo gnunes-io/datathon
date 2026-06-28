@@ -1,4 +1,4 @@
-"""Página Arquitetura — diagrama da solução."""
+"""Página Arquitetura, diagrama da solução."""
 import os
 import sys
 import streamlit as st
