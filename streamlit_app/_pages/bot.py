@@ -129,6 +129,16 @@ acolher o aluno no momento em que ele sente a necessidade, coletar sinais de ale
 encaminhá-lo para o programa certo, sem substituir o olhar humano das psicopedagogas,
 mas chegando antes delas.
     """)
+    _C = "display:inline-flex;align-items:center;gap:0.35rem;background:#EDE9FE;color:#6D28D9;font-size:0.78rem;font-weight:600;padding:0.38rem 0.85rem;border-radius:20px;white-space:nowrap;"
+    st.markdown(
+        '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem;">'
+        f'<span style="{_C}">🤍 Humanizada</span>'
+        f'<span style="{_C}">🧠 Especialista</span>'
+        f'<span style="{_C}">💜 Acolhedora</span>'
+        f'<span style="{_C}">🔒 Ética</span>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
@@ -243,15 +253,7 @@ _CHIP = "display:inline-flex;align-items:center;gap:0.35rem;background:#EDE9FE;c
 _LBL  = "font-size:0.7rem;font-weight:700;letter-spacing:0.08em;color:#A78BFA;text-transform:uppercase;display:block;margin-bottom:0.6rem;"
 
 st.markdown(
-    '<div style="text-align:center;margin:0.5rem 0 2rem;padding:1.75rem 1.5rem;background:white;border-radius:16px;box-shadow:0 2px 12px rgba(124,58,237,0.07);">'
-    f'<span style="{_LBL}">A Bia</span>'
-    '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;margin-bottom:1.25rem;">'
-    f'<span style="{_CHIP}">🤍 Humanizada</span>'
-    f'<span style="{_CHIP}">🧠 Especialista</span>'
-    f'<span style="{_CHIP}">💜 Acolhedora</span>'
-    f'<span style="{_CHIP}">🔒 Ética</span>'
-    '</div>'
-    '<div style="width:40px;height:1px;background:#E9D5FF;margin:0 auto 1.25rem;"></div>'
+    '<div style="text-align:center;margin:0.5rem 0 2rem;padding:1.5rem 1.5rem;background:white;border-radius:16px;box-shadow:0 2px 12px rgba(124,58,237,0.07);">'
     f'<span style="{_LBL}">O Sistema</span>'
     '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;">'
     f'<span style="{_CHIP}">📱 Mobile Friendly</span>'
