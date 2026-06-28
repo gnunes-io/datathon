@@ -240,8 +240,8 @@ st.markdown("### Stack tecnológico")
 st.caption("Ferramentas que tornam a Bia possível.")
 
 _STACK = [
-    ("bia.png",      "Bia"),
-    ("openapi.png",  "OpenAI"),
+    ("bia.png",      "HTML + JS"),
+    ("openapi.png",  "OpenAI API"),
     ("n8n.png",      "n8n"),
     ("pinecone.png", "Pinecone"),
     ("supabase.png", "Supabase"),

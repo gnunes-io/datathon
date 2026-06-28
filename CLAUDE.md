@@ -10,7 +10,7 @@ Quatro entregáveis:
 1. `eda/` — Análise Exploratória de Dados (12 perguntas)
 2. `model/` — Modelo preditivo binário exportado como `.pkl`
 3. `streamlit_app/` — App de apoio à decisão para pedagogos ("🌟Passos Mágicos - Tech Hub")
-4. `bot/` — Chat com 3 personas (Guia do Aluno / Painel do Gestor / Radar de Risco)
+4. `bot/` — Bia, assistente psicopedagógica virtual (chat HTML/JS + n8n + OpenAI + RAG)
 
 ---
 
@@ -33,21 +33,33 @@ Quatro entregáveis:
 │   ├── requirements.txt
 │   ├── .streamlit/
 │   │   └── config.toml              # tema PM (light, PM_BLUE sidebar via CSS)
+│   ├── assets/                      # imagens estáticas usadas pelas pages
+│   │   ├── bia_intro.png            # personagem Bia (retrato bust, usado em bot.py)
+│   │   ├── Arquitetura_Bia.png      # diagrama de arquitetura do sistema
+│   │   ├── Passos-magicos-icon-cor.png
+│   │   ├── bia.png                  # logo stack: HTML+JS
+│   │   ├── openapi.png              # logo stack: OpenAI API
+│   │   ├── n8n.png                  # logo stack: n8n
+│   │   ├── pinecone.png             # logo stack: Pinecone
+│   │   ├── supabase.png             # logo stack: Supabase
+│   │   └── vercel.png               # logo stack: Vercel
 │   └── _pages/                      # prefixo _ desativa auto-detecção do Streamlit
 │       ├── home.py
 │       ├── radar.py
 │       ├── eda.py
+│       ├── bot.py                   # página Bia — tema lavanda, logos stack, CTA
 │       ├── apresentacao.py          # placeholder
 │       ├── arquitetura.py           # placeholder
 │       └── staff.py                 # placeholder (CRUD futuro)
-├── relatorio_atividades_2025_bia.md   # contexto 2025 curado para RAG da Bia
-├── codigo_etica_conduta.md            # código de ética limpo para RAG da Bia
 └── bot/
-    ├── index.html                     # frontend da Bia (sem secrets — proxy via /api/chat)
-    ├── api/chat.js                    # Vercel serverless: proxy seguro para n8n
-    ├── vercel.json                    # outputDirectory: "." (zero-config)
-    ├── package.json                   # node 24.x, sem dependências
-    └── PsicopedaBia.json              # workflow n8n exportado (importar no n8n)
+    ├── index.html                   # frontend Bia (HTML/JS, mobile-friendly, sem secrets)
+    ├── api/chat.js                  # Vercel serverless: proxy seguro para n8n
+    ├── vercel.json                  # outputDirectory: "." (zero-config)
+    ├── package.json                 # node 24.x, sem dependências
+    ├── bia_avatar.png               # avatar da Bia usado no chat
+    └── RAG/
+        ├── relatorio_atividades_2025_bia.md  # contexto 2025 curado para ingestão
+        └── codigo_etica_conduta.md           # código de ética para ingestão
 ```
 
 ---
@@ -246,6 +258,29 @@ Neuropsicopedagogia · Assistência Social · Equipe Pedagógica (tabs por disci
 4 unidades, 119 universitários, 87 no mercado, 120 alfabetizados, +14.000h PAC) +
 jornada do aprendiz visualizada em 6 etapas.
 
+**Bia page** (`_pages/bot.py`): tema lavanda completo (override do PM blue via CSS injection).
+Seções: hero com círculos decorativos, "Por que criamos a Bia?" (imagem + texto + 8 tags),
+"Como a Bia funciona" (6 cards com efeitos decorativos), arquitetura, stack tecnológico,
+galeria, CTA final.
+
+**CSS scoping de imagens — gotcha Streamlit:**
+`st.image()` não aceita classes. Para aplicar estilos só em imagens específicas (ex.: logos
+do stack) sem afetar outras da página, usar marcador + seletor `:has()`:
+```python
+st.markdown('<div class="logo-marker"></div>', unsafe_allow_html=True)
+st.image(img_path, use_container_width=True)
+```
+```css
+[data-testid="stMarkdown"]:has(.logo-marker) + [data-testid="stImage"] img {
+    height: 68px !important; object-fit: contain;
+}
+```
+
+**HTML inline em `st.markdown()` — gotcha indentação:**
+Streamlit interpreta linhas com 4+ espaços iniciais como bloco de código Markdown.
+Sempre usar string concatenada (`'<div>' + f'<span>{x}</span>' + '</div>'`) em vez de
+f-strings multi-linha com indentação.
+
 **SHAP — gotcha sklearn 1.6+:**
 `genero_cod` all-NaN → imputer dropa a coluna → `X_imp` shape `(1, 17)` →
 SHAP retorna `(1, 17, 2)`. Usar `valid_cols` (17 features não-NaN) para indexar o Series,
@@ -347,6 +382,15 @@ O prompt é estruturado em camadas determinísticas para maximizar confiabilidad
 | Off-topic (Copa do Mundo) | ✅ | Redirecionou com leveza |
 | ESTADO 3 (pedir nome após BuscarAluno) | ⚠️ | Às vezes pula — fix aplicado: "vá para ESTADO 3 antes de qualquer comentário" |
 | ConhecimentosPM chamado para perguntas institucionais | ⏳ | Speed Up confirmou RAG ativo; Construindo Sonhos pendente confirmação no n8n |
+
+### Mobile-friendly — `bot/index.html`
+Layout refatorado para ser keyboard-safe em iOS/Android:
+- `textarea` com `font-size: 16px` — abaixo disso iOS Safari faz zoom automático no foco
+- `body`: `display:flex; flex-direction:column; height:100dvh` — sem `calc()` fixo
+- `<main>`: `flex:1; min-height:0; overflow-y:auto` — scroll nativo, sem altura calculada
+- `<footer>` (barra de input): substitui `position:fixed` — reflui corretamente com o teclado
+- `viewport-fit=cover` + meta apple PWA para notch/home indicator
+- `overscroll-behavior:none` no body, `touch-action:manipulation` nos botões
 
 ### Segurança
 - Secrets **NUNCA** no frontend JS (`index.html`)
