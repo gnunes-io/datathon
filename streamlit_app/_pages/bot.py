@@ -136,7 +136,7 @@ mas chegando antes delas.
         f'<span style="{_C}">🤍 Humanizada</span>'
         f'<span style="{_C}">🧠 Especialista</span>'
         f'<span style="{_C}">💜 Acolhedora</span>'
-        f'<span style="{_C}">🔒 Ética</span>'
+        f'<span style="{_C}">⚖️ Ética</span>'
         '</div>'
         '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">'
         f'<span style="{_C}">📱 Mobile Friendly</span>'
