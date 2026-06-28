@@ -1,21 +1,81 @@
 """Página Assistente Psicopedagógico, Bia."""
+import base64
 import os
 import sys
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import GLOBAL_CSS, PM_BLUE, PM_GOLD
+from utils import GLOBAL_CSS
 
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
 BOT_URL = "https://passos-magicos-html.vercel.app/"
 
-# ── Hero ──────────────────────────────────────────────────────────────────────
+# ── Avatar (base64 para embed inline no HTML) ─────────────────────────────────
+_AVATAR_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'assets', 'bia_avatar.png'
+)
+_avatar_b64 = None
+if os.path.exists(_AVATAR_PATH):
+    with open(_AVATAR_PATH, 'rb') as _f:
+        _avatar_b64 = base64.b64encode(_f.read()).decode()
+
+_avatar_html = (
+    f'<img src="data:image/png;base64,{_avatar_b64}" alt="Bia" '
+    'style="width:88px;height:88px;border-radius:50%;object-fit:cover;'
+    'border:3px solid rgba(255,255,255,0.35);margin:0 auto 0.75rem;display:block;">'
+    if _avatar_b64 else
+    '<div style="width:88px;height:88px;border-radius:50%;'
+    'background:rgba(255,255,255,0.15);margin:0 auto 0.75rem;'
+    'display:flex;align-items:center;justify-content:center;font-size:2.5rem;">🤖</div>'
+)
+
+# ── CSS: tema lavanda da Bia (sobrepõe o tema azul PM nesta página) ───────────
 st.markdown("""
-<div class="pm-hero">
-    <h1>💬 Bia, Assistente Psicopedagógica Virtual</h1>
-    <p>Uma IA de apoio à jornada educacional dos aprendizes Passos Mágicos,
-       disponível a qualquer hora, com escuta ativa e encaminhamentos personalizados.</p>
+<style>
+[data-testid="stAppViewContainer"] > .main { background: #F7F4FF !important; }
+
+.bia-hero {
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    border-radius: 16px; padding: 2rem 2rem 1.75rem;
+    text-align: center; margin-bottom: 1.5rem;
+}
+.bia-hero h1  { color: #fff; font-size: 1.9rem; margin: 0 0 0.2rem; }
+.bia-hero .sub { color: #E9D5FF; font-size: 0.88rem; margin: 0; }
+
+.section-hdr  { color: #7C3AED !important; border-bottom-color: #C4B5FD !important; }
+.step-card    { border-top-color: #7C3AED !important; }
+.step-card h4 { color: #7C3AED !important; }
+
+[data-testid="stMarkdown"] h3 { color: #6D28D9; }
+
+hr { border-color: #E9D5FF !important; }
+
+[data-testid="stLinkButton"] a {
+    background-color: #7C3AED !important;
+    border-color:     #7C3AED !important;
+    color: white !important;
+}
+[data-testid="stLinkButton"] a:hover {
+    background-color: #6D28D9 !important;
+    border-color:     #6D28D9 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ── Hero ──────────────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div class="bia-hero">
+    {_avatar_html}
+    <h1>Bia</h1>
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin:0.1rem 0 0.4rem;">
+        <span style="width:9px;height:9px;background:#4ade80;border-radius:50%;flex-shrink:0;"></span>
+        <span class="sub">Assistente Psicopedagógica Virtual · Online</span>
+    </div>
+    <p style="color:#EDE9FE;font-size:0.82rem;margin:0;opacity:0.75;">
+        Passos Mágicos · Apoio educacional disponível 24h
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -55,7 +115,7 @@ st.markdown("### Como a Bia funciona")
 c1, c2 = st.columns(2, gap="large")
 
 with c1:
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">🙅</div>
         <h4>Anti-despejo de indicadores</h4>
@@ -66,7 +126,7 @@ with c1:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">🆔</div>
         <h4>Personalização por RA</h4>
@@ -77,7 +137,7 @@ with c1:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">📚</div>
         <h4>Respostas baseadas em RAG</h4>
@@ -89,7 +149,7 @@ with c1:
     """, unsafe_allow_html=True)
 
 with c2:
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">🆘</div>
         <h4>Protocolo de crise emocional</h4>
@@ -100,7 +160,7 @@ with c2:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">🧠</div>
         <h4>Memória de sessão contextual</h4>
@@ -110,7 +170,7 @@ with c2:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
+    st.markdown("""
     <div class="step-card">
         <div style="font-size:2rem;">🔀</div>
         <h4>Redirecionamento gentil fora do escopo</h4>
@@ -133,7 +193,10 @@ expõe credenciais; um **proxy serverless** que autentica e encaminha as mensage
 e um **workflow n8n** que orquestra o agente GPT-4o-mini com ferramentas especializadas.
 """)
 
-_ARCH_IMG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "Arquitetura_Bia.png")
+_ARCH_IMG = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "assets", "Arquitetura_Bia.png"
+)
 if os.path.exists(_ARCH_IMG):
     st.image(_ARCH_IMG, use_container_width=True)
 
