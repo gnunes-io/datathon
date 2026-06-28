@@ -131,11 +131,19 @@ mas chegando antes delas.
     """)
     _C = "display:inline-flex;align-items:center;gap:0.35rem;background:#EDE9FE;color:#6D28D9;font-size:0.78rem;font-weight:600;padding:0.38rem 0.85rem;border-radius:20px;white-space:nowrap;"
     st.markdown(
-        '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem;">'
+        '<div style="margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;">'
+        '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">'
         f'<span style="{_C}">🤍 Humanizada</span>'
         f'<span style="{_C}">🧠 Especialista</span>'
         f'<span style="{_C}">💜 Acolhedora</span>'
         f'<span style="{_C}">🔒 Ética</span>'
+        '</div>'
+        '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">'
+        f'<span style="{_C}">📱 Mobile Friendly</span>'
+        f'<span style="{_C}">⏰ Disponível 24h</span>'
+        f'<span style="{_C}">💬 Lembra a Conversa</span>'
+        f'<span style="{_C}">🎯 Respostas Precisas</span>'
+        '</div>'
         '</div>',
         unsafe_allow_html=True
     )
@@ -249,18 +257,3 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── Tags: Bia + Sistema ───────────────────────────────────────────────────────
-_CHIP = "display:inline-flex;align-items:center;gap:0.35rem;background:#EDE9FE;color:#6D28D9;font-size:0.78rem;font-weight:600;padding:0.38rem 0.85rem;border-radius:20px;white-space:nowrap;"
-_LBL  = "font-size:0.7rem;font-weight:700;letter-spacing:0.08em;color:#A78BFA;text-transform:uppercase;display:block;margin-bottom:0.6rem;"
-
-st.markdown(
-    '<div style="text-align:center;margin:0.5rem 0 2rem;padding:1.5rem 1.5rem;background:white;border-radius:16px;box-shadow:0 2px 12px rgba(124,58,237,0.07);">'
-    f'<span style="{_LBL}">O Sistema</span>'
-    '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;">'
-    f'<span style="{_CHIP}">📱 Mobile Friendly</span>'
-    f'<span style="{_CHIP}">⏰ Disponível 24h</span>'
-    f'<span style="{_CHIP}">💬 Lembra a Conversa</span>'
-    f'<span style="{_CHIP}">🎯 Respostas Precisas</span>'
-    '</div>'
-    '</div>',
-    unsafe_allow_html=True
-)
