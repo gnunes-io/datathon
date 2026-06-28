@@ -226,28 +226,41 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
 # ── Stack tecnológico ─────────────────────────────────────────────────────────
+import base64
+
+def _b64img(fname):
+    path = os.path.join(_ASSETS, fname)
+    if not os.path.exists(path):
+        return None
+    with open(path, 'rb') as f:
+        return base64.b64encode(f.read()).decode()
+
 st.markdown("### Stack tecnológico")
 st.caption("Ferramentas que tornam a Bia possível.")
 
 _STACK = [
-    ("bia.png",       "Bia"),
-    ("openapi.png",   "OpenAI"),
-    ("n8n.png",       "n8n"),
-    ("pinecone.png",  "Pinecone"),
-    ("supabase.png",  "Supabase"),
-    ("vercel.png",    "Vercel"),
+    ("bia.png",      "Bia"),
+    ("openapi.png",  "OpenAI"),
+    ("n8n.png",      "n8n"),
+    ("pinecone.png", "Pinecone"),
+    ("supabase.png", "Supabase"),
+    ("vercel.png",   "Vercel"),
 ]
 
-_logo_cols = st.columns(6, gap="medium")
-for col, (fname, label) in zip(_logo_cols, _STACK):
-    with col:
-        img_path = os.path.join(_ASSETS, fname)
-        if os.path.exists(img_path):
-            st.image(img_path, use_container_width=True)
-        st.markdown(
-            f'<p style="text-align:center;font-size:0.72rem;color:#7C3AED;font-weight:600;margin-top:0.3rem;">{label}</p>',
-            unsafe_allow_html=True
-        )
+_CARD = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.55rem;padding:1rem 0.75rem;background:white;border-radius:14px;box-shadow:0 2px 8px rgba(124,58,237,0.08);flex:1;min-width:90px;"
+_IMG  = "width:72px;height:72px;object-fit:contain;"
+_LBL  = "font-size:0.73rem;color:#7C3AED;font-weight:600;text-align:center;"
+
+_cards_html = ""
+for fname, label in _STACK:
+    b64 = _b64img(fname)
+    img = f'<img src="data:image/png;base64,{b64}" style="{_IMG}" alt="{label}">' if b64 else f'<div style="{_IMG}background:#EDE9FE;border-radius:8px;"></div>'
+    _cards_html += f'<div style="{_CARD}">{img}<span style="{_LBL}">{label}</span></div>'
+
+st.markdown(
+    f'<div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin:0.25rem 0;">{_cards_html}</div>',
+    unsafe_allow_html=True
+)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
