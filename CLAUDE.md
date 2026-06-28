@@ -356,6 +356,16 @@ O prompt é estruturado em camadas determinísticas para maximizar confiabilidad
 
 ---
 
+## Regras de Deploy / Push
+
+- **`bot/`** → pushar sempre para **dois** repositórios:
+  1. `gnunes-io/datathon` (este repo, pasta `bot/`)
+  2. `gnunes-io/passos_magicos_html` (repo separado em `C:\Users\gabri\passos_magicos_html_tmp\`)
+     — copiar o `bot/index.html` atualizado para lá e commitar/pushar.
+- **Demais pastas** (`streamlit_app/`, `eda/`, `model/`, etc.) → somente `gnunes-io/datathon`.
+
+---
+
 ## Decisões Técnicas Relevantes
 
 - **Target composto** `(Defasagem ≥ 1) | (INDE < 5,5)`: o target original (`Defasagem ≥ 1`)
