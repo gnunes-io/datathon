@@ -61,20 +61,30 @@ st.markdown("""
 .bia-card p     { position: relative; z-index: 1; }
 .bia-card p     { color: #64748B; font-size: 0.82rem; margin: 0; line-height: 1.55; }
 
-/* carousel placeholder */
-.bia-carousel { display:flex; gap:1rem; overflow-x:auto; padding:0.4rem 0.1rem 1rem;
-                scrollbar-width: thin; scrollbar-color: #C4B5FD transparent; }
-.bia-carousel::-webkit-scrollbar { height: 4px; }
-.bia-carousel::-webkit-scrollbar-thumb { background: #C4B5FD; border-radius: 2px; }
-.bia-ph-card {
-    flex-shrink: 0; width: 260px; height: 165px;
-    background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
-    border-radius: 12px; border: 1px solid #C4B5FD;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 0.4rem;
+/* stack logos — scoped via :has() para não afetar outras imagens */
+[data-testid="stMarkdown"]:has(.logo-marker) + [data-testid="stImage"] {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 10px rgba(124,58,237,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-in;
 }
-.bia-ph-card span.ph-icon { font-size: 2rem; }
-.bia-ph-card span.ph-lbl  { font-size: 0.75rem; color: #7C3AED; font-weight: 600; }
+[data-testid="stMarkdown"]:has(.logo-marker) + [data-testid="stImage"]:hover {
+    transform: translateY(-5px) scale(1.04);
+    box-shadow: 0 10px 24px rgba(124,58,237,0.18);
+}
+[data-testid="stMarkdown"]:has(.logo-marker) + [data-testid="stImage"] img {
+    height: 68px !important;
+    width: auto !important;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
 
 /* section headers */
 [data-testid="stMarkdown"] h3 { color: #6D28D9; }
@@ -226,15 +236,6 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
 # ── Stack tecnológico ─────────────────────────────────────────────────────────
-import base64
-
-def _b64img(fname):
-    path = os.path.join(_ASSETS, fname)
-    if not os.path.exists(path):
-        return None
-    with open(path, 'rb') as f:
-        return base64.b64encode(f.read()).decode()
-
 st.markdown("### Stack tecnológico")
 st.caption("Ferramentas que tornam a Bia possível.")
 
@@ -247,20 +248,15 @@ _STACK = [
     ("vercel.png",   "Vercel"),
 ]
 
-_CARD = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.55rem;padding:1rem 0.75rem;background:white;border-radius:14px;box-shadow:0 2px 8px rgba(124,58,237,0.08);flex:1;min-width:90px;"
-_IMG  = "width:72px;height:72px;object-fit:contain;"
-_LBL  = "font-size:0.73rem;color:#7C3AED;font-weight:600;text-align:center;"
-
-_cards_html = ""
-for fname, label in _STACK:
-    b64 = _b64img(fname)
-    img = f'<img src="data:image/png;base64,{b64}" style="{_IMG}" alt="{label}">' if b64 else f'<div style="{_IMG}background:#EDE9FE;border-radius:8px;"></div>'
-    _cards_html += f'<div style="{_CARD}">{img}<span style="{_LBL}">{label}</span></div>'
-
-st.markdown(
-    f'<div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin:0.25rem 0;">{_cards_html}</div>',
-    unsafe_allow_html=True
-)
+_logo_cols = st.columns(6, gap="medium")
+_LBL_S = "text-align:center;font-size:0.72rem;color:#7C3AED;font-weight:600;margin-top:0.4rem;"
+for col, (fname, label) in zip(_logo_cols, _STACK):
+    with col:
+        st.markdown('<div class="logo-marker"></div>', unsafe_allow_html=True)
+        img_path = os.path.join(_ASSETS, fname)
+        if os.path.exists(img_path):
+            st.image(img_path, use_container_width=True)
+        st.markdown(f'<p style="{_LBL_S}">{label}</p>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
