@@ -237,3 +237,50 @@ st.markdown(f"""
     </a>
 </div>
 """, unsafe_allow_html=True)
+
+# ── Tags: Bia + Sistema ───────────────────────────────────────────────────────
+_TAGS_BIA = [
+    ("🤍", "Humanizada"),
+    ("🧠", "Especialista"),
+    ("💜", "Acolhedora"),
+    ("🔒", "Ética"),
+]
+_TAGS_SYS = [
+    ("📱", "Mobile Friendly"),
+    ("⏰", "Disponível 24h"),
+    ("💬", "Lembra a Conversa"),
+    ("🎯", "Respostas Precisas"),
+]
+
+def _chips(tags):
+    return "".join(f"""
+        <span style="display:inline-flex;align-items:center;gap:0.35rem;
+                     background:#EDE9FE;color:#6D28D9;font-size:0.78rem;font-weight:600;
+                     padding:0.38rem 0.85rem;border-radius:20px;white-space:nowrap;">
+            {icon} {label}
+        </span>""" for icon, label in tags)
+
+def _group_label(text):
+    return f"""
+        <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;
+                     color:#A78BFA;text-transform:uppercase;">{text}</span>"""
+
+st.markdown(f"""
+<div style="text-align:center; margin:0.5rem 0 2rem; padding:1.75rem 1rem;
+            background:white; border-radius:16px;
+            box-shadow:0 2px 12px rgba(124,58,237,0.07);">
+    <div style="margin-bottom:1.1rem;">
+        {_group_label("A Bia")}
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;margin-top:0.6rem;">
+            {_chips(_TAGS_BIA)}
+        </div>
+    </div>
+    <div style="width:40px;height:1px;background:#E9D5FF;margin:0 auto 1.1rem;"></div>
+    <div>
+        {_group_label("O Sistema")}
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;margin-top:0.6rem;">
+            {_chips(_TAGS_SYS)}
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
