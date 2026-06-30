@@ -173,10 +173,21 @@ _CARDS = [
      "como bússola interna, traduzindo-os em conversa acolhedora, sem transformar a interação "
      "em um relatório frio de dados."),
 
-    ("🆘", "Protocolo de crise emocional",
-     "Ao detectar sinais de sofrimento intenso ou risco, a Bia entra no Estado de Crise: "
-     "interrompe qualquer pauta acadêmica, valida o sentimento do aluno e oferece o contato "
-     "do CVV (188), priorizando o acolhimento humano acima de qualquer encaminhamento educacional."),
+    ("🆘", "Protocolo de crise e conteúdo sensível",
+     "Diante de sinais de crise emocional, conteúdo sensível ou risco, a Bia interrompe "
+     "qualquer outro assunto, mesmo um cadastro em andamento, para acolher primeiro. "
+     "Em crises graves oferece o contato do CVV (188); em temas delicados nunca usa humor "
+     "e sempre direciona para a equipe humana da Passos Mágicos."),
+
+    ("🤝", "Cuidado em situações de bullying",
+     "Quando um aluno relata bullying, violência ou exclusão entre colegas, a Bia valida "
+     "o que ele sente sem culpabilizá-lo e incentiva a buscar um adulto de confiança da "
+     "Passos Mágicos, como a coordenação pedagógica ou a psicologia."),
+
+    ("🔒", "Privacidade entre colegas",
+     "A Bia nunca compartilha, infere ou comenta dados de outro aluno. Cada conversa é "
+     "estritamente sobre quem está do outro lado da tela, protegendo a privacidade de "
+     "toda a comunidade."),
 
     ("🆔", "Personalização por RA",
      "Ao informar o número de matrícula (ex.: RA-42), a Bia consulta a base Supabase e acessa "
@@ -191,7 +202,8 @@ _CARDS = [
     ("📚", "Respostas baseadas em RAG",
      "Toda descrição de programa institucional (Construindo Sonhos, Speed Up, Vem Ser…) "
      "vem exclusivamente da base de conhecimento Pinecone, alimentada pelo Relatório de "
-     "Atividades 2025 e pelo Código de Ética da ONG. A Bia nunca improvisa detalhes institucionais."),
+     "Atividades 2025 e pelo Código de Ética da ONG. A Bia nunca inventa ou improvisa "
+     "informações que não tem."),
 
     ("🔀", "Redirecionamento gentil fora do escopo",
      "Perguntas não relacionadas à jornada educacional (Copa do Mundo, receitas, política…) "

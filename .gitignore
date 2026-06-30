@@ -30,10 +30,4 @@ Thumbs.db
 PsicopedaBia.json
 
 # Arquivos de origem dos assets (cópias já em streamlit_app/assets/)
-bia.png
-openapi.png
-n8n.png
-pinecone.png
-supabase.png
-vercel.png
-"ChatGPT Image Jun 21, 2026, 01_24_25 PM.png"
+assets_source/
