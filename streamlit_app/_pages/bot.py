@@ -185,6 +185,7 @@ _CARDS = [
      "Passos Mágicos, como a coordenação pedagógica ou a psicologia."),
 
     ("🛡️", "Privacidade entre colegas",
+
      "A Bia nunca compartilha, infere ou comenta dados de outro aluno. Cada conversa é "
      "estritamente sobre quem está do outro lado da tela, protegendo a privacidade de "
      "toda a comunidade."),
