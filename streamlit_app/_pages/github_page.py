@@ -8,7 +8,7 @@ from utils import GLOBAL_CSS, PM_BLUE, PM_GOLD
 
 st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
-GITHUB_URL = "https://google.com"  # placeholder, substituir pela URL do repo em produção
+GITHUB_URL = "https://github.com/DeleteTableSemWhere/Passos-Magicos"
 
 st.markdown("""
 <div class="pm-hero">

@@ -20,7 +20,7 @@ NOTEBOOKS = {
         "desc": "12 perguntas analíticas sobre os dados 2022–2024 da Passos Mágicos",
     },
     "modelo": {
-        "label": "🤖 Modelo ML",
+        "label": "🧠 Modelo ML",
         "path": "model/modelo_preditivo.ipynb",
         "title": "Modelo Preditivo",
         "desc": "Random Forest com validação cruzada OOF · AUC-ROC 0,9695 · Threshold 61%",
@@ -71,6 +71,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 nbviewer_url = f"https://nbviewer.org/github/{GITHUB_REPO}/blob/{GITHUB_BRANCH}/{ativo['path']}"
 github_url = f"https://github.com/{GITHUB_REPO}/blob/{GITHUB_BRANCH}/{ativo['path']}"
 
+st.info("⏳ O preview pode levar alguns segundos para carregar, aguarde nesta página.")
 components.iframe(nbviewer_url, height=900, scrolling=True)
 
 st.caption(f"Preview via [nbviewer]({nbviewer_url}) · [ver no GitHub]({github_url})")
