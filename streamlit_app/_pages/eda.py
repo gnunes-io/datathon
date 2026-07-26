@@ -20,7 +20,7 @@ PEDRA_COLORS   = {
     'Quartzo': '#6B7280', 'Ágata': '#3B82F6',
     'Ametista': '#8B5CF6', 'Topázio': '#F59E0B',
 }
-YEAR_COLORS = {'2022': '#94A3B8', '2023': PM_BLUE, '2024': PM_GOLD}
+YEAR_COLORS = {'2022': "#ACCEFD", '2023': "#3D83BD", '2024': "#2661BB"}
 _GRID       = '#E2E8F0'
 
 # ── Data loading ───────────────────────────────────────────────────────────────
@@ -131,6 +131,31 @@ with st.sidebar:
     fase_range = st.slider("Faixa de fase", 0, 9, (0, 9),
                            help="0 = Fase Alfa (alfabetização)")
 
+# ── Sidebar Colors ────────────────────────────────────────────────────────────
+st.markdown(f"""
+<style>
+    /* ── Cores para as tags de ANO (Sidebar e no meio da página) ── */
+    span[data-baseweb="tag"][aria-label*="2022"] {{
+        background-color: {YEAR_COLORS['2022']} !important;
+        color: #1E293B !important; /* Texto escuro para dar contraste no azul claro */
+    }}
+    span[data-baseweb="tag"][aria-label*="2023"] {{
+        background-color: {YEAR_COLORS['2023']} !important;
+        color: #FFFFFF !important;
+    }}
+    span[data-baseweb="tag"][aria-label*="2024"] {{
+        background-color: {YEAR_COLORS['2024']} !important;
+        color: #FFFFFF !important;
+    }}
+
+    /* ── Cores para as tags de PEDRA ── */
+    span[data-baseweb="tag"][aria-label*="Quartzo"] {{ background-color: {PEDRA_COLORS['Quartzo']} !important; }}
+    span[data-baseweb="tag"][aria-label*="Ágata"] {{ background-color: {PEDRA_COLORS['Ágata']} !important; }}
+    span[data-baseweb="tag"][aria-label*="Ametista"] {{ background-color: {PEDRA_COLORS['Ametista']} !important; }}
+    span[data-baseweb="tag"][aria-label*="Topázio"] {{ background-color: {PEDRA_COLORS['Topázio']} !important; }}
+</style>
+""", unsafe_allow_html=True)
+
 # NaN values pass through when field is missing; filters apply only to known values
 mask = (
     df['ano'].isin(anos_sel) &
@@ -160,6 +185,14 @@ m3.metric("Risco composto",       f"{taxa_risco:.1%}",
 m4.metric("Defasagem formal",     f"{taxa_def_formal:.1%}",
           help="Alunos cursando fase abaixo da esperada para a idade")
 m5.metric("Pedra mais frequente", str(pedra_mais))
+
+_insight(
+    "Atenção! Tenha em mente que para a correta interpretação dos resultados aqui apresentados, "
+    "se faz necessária o correto entendimento do significado de cada Indicador. "
+    "Caso haja dúvidas, é possível acessar nosso Glossário de Indicadores via menu na lateral esquerda, "
+    "na seção Início, ou clicando <a href='/' target='_self'>aqui</a>. "
+    "Lá você encontrará a definição de cada indicador, bem como a forma de cálculo e interpretação."
+)
 
 st.markdown("---")
 
@@ -208,7 +241,7 @@ _pct_cr = (contagem['Alunos'].iloc[-1] / contagem['Alunos'].iloc[0] - 1) * 100
 _insight(
     f"O programa cresceu <strong>{_pct_cr:.0f}%</strong> entre 2022 e 2024 "
     f"({contagem['Alunos'].iloc[0]:,} → {contagem['Alunos'].iloc[-1]:,} alunos). "
-    "O relatório 2025 registra 1.200 aprendizes, a trajetória de crescimento é consistente."
+    "O relatório 2025 registra 1.200 aprendizes, o que comprova que a trajetória de crescimento segue consistente."
 )
 
 st.markdown("---")
@@ -249,7 +282,7 @@ if len(quartz) >= 2:
         f"A proporção de Quartzo <strong>{'caiu' if dq < 0 else 'subiu'} "
         f"{abs(dq):.1f} p.p.</strong> entre {_ano_ini} e {_ano_fim} "
         f"({quartz['pct'].iloc[0]:.0f}% → {quartz['pct'].iloc[-1]:.0f}%). "
-        "Reduzir Quartzo é o principal KPI de impacto da ONG."
+        "Reduzir Quartzo é o principal KPI de impacto da ONG, mesmo com a crescente de 23 para 24, percebesse a distribuição elevada nas pedras intermediárias Ágata e Ametista, o que indica que a maioria dos alunos está evoluindo para patamares mais altos de desenvolvimento."
     )
 
 st.markdown("---")
@@ -339,7 +372,73 @@ with tab_fase:
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 5. INDE MÉDIO POR FASE, escala 4–8
+# 5. FUNIL DE RISCO POR FASE, taxa + volume
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown('<p class="section-hdr">Funil de risco por fase, onde priorizar</p>',
+            unsafe_allow_html=True)
+
+rf2 = (dff[dff['Fase'].notna() & dff['target'].notna()]
+       .groupby('Fase')['target']
+       .agg(['mean', 'count'])
+       .reset_index()
+       .rename(columns={'mean': 'Taxa', 'count': 'n'}))
+
+rf2['Fase']      = rf2['Fase'].astype(int)
+
+# --- FILTRO ADICIONADO: Remove a Fase 9 da análise e do gráfico para evitar confusão visual---
+rf2              = rf2[rf2['Fase'] < 9]
+rf2['Taxa %']    = rf2['Taxa'] * 100
+rf2['FaseLabel'] = rf2['Fase'].apply(lambda f: 'Alfa' if f == 0 else f'F{f}')
+rf2 = rf2.sort_values('Fase')
+
+fig_fun = go.Figure()
+fig_fun.add_trace(go.Bar(
+    x=rf2['FaseLabel'], y=rf2['n'],
+    name='Total de alunos',
+    marker_color='rgba(0,48,135,0.12)',
+    yaxis='y2',
+    hovertemplate='%{x}: %{y} alunos<extra></extra>',
+))
+fig_fun.add_trace(go.Scatter(
+    x=rf2['FaseLabel'], y=rf2['Taxa %'],
+    name='Taxa de risco (%)',
+    mode='lines+markers+text',
+    line=dict(color=RISK_HIGH, width=3),
+    marker=dict(
+        size=11,
+        color=[RISK_HIGH if v >= 40 else ('#F59E0B' if v >= 20 else RISK_LOW) for v in rf2['Taxa %']],
+    ),
+    text=[f"{v:.0f}%" for v in rf2['Taxa %']],
+    textposition='top center',
+    textfont=dict(size=10),
+    hovertemplate='%{x}: %{y:.1f}% em risco<extra></extra>',
+))
+fig_fun.update_layout(
+    **_layout(height=380),
+    xaxis=dict(title='Fase escolar'),
+    yaxis=dict(title='Taxa de risco (%)', range=[0, 110], gridcolor=_GRID),
+    yaxis2=dict(title='Nº de alunos', overlaying='y', side='right',
+                showgrid=False, range=[0, rf2['n'].max() * 4]),
+    legend=dict(orientation='h', yanchor='bottom', y=-0.3),
+    hovermode='x unified',
+)
+st.plotly_chart(fig_fun, use_container_width=True)
+
+fase_max     = rf2.loc[rf2['Taxa %'].idxmax()]
+fase_max_vol = rf2.loc[(rf2['Taxa %'] * rf2['n']).idxmax()]
+_fn = lambda f: 'Alfa' if int(f) == 0 else f"Fase {int(f)}"
+_insight(
+    f"<strong>{_fn(fase_max['Fase'])}</strong> tem a maior taxa de risco ({fase_max['Taxa %']:.0f}%) com o número de alunos chegando a ({int(fase_max['n'] * fase_max['Taxa %'] / 100):.0f} alunos). "
+    f"Por sua vez, <strong>{_fn(fase_max_vol['Fase'])}</strong> tem o maior volume absoluto de alunos em risco "
+    f"({int(fase_max_vol['Taxa %'] * fase_max_vol['n'] / 100):.0f} alunos), com taxa de risco de {fase_max_vol['Taxa %']:.0f}%. "
+    "Alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
+)
+
+st.markdown("---")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6. INDE MÉDIO POR FASE, escala 4–8
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">INDE médio por fase escolar</p>', unsafe_allow_html=True)
 st.caption("Fases 8 e 9 não possuem INDE registrado nos dados 2022–2024, alunos existem mas o campo está em branco na fonte.")
@@ -386,7 +485,7 @@ _insight(
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 6. SCATTER, Engajamento × Desempenho (2024 apenas)
+# 7. SCATTER, Engajamento × Desempenho (2024 apenas)
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown('<p class="section-hdr">Engajamento × Desempenho acadêmico, 2024</p>',
             unsafe_allow_html=True)
@@ -458,66 +557,6 @@ if not dff_sc.empty:
 
 st.markdown("---")
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 7. FUNIL DE RISCO POR FASE, taxa + volume
-# ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<p class="section-hdr">Funil de risco por fase, onde priorizar</p>',
-            unsafe_allow_html=True)
-
-rf2 = (dff[dff['Fase'].notna() & dff['target'].notna()]
-       .groupby('Fase')['target']
-       .agg(['mean', 'count'])
-       .reset_index()
-       .rename(columns={'mean': 'Taxa', 'count': 'n'}))
-rf2['Fase']      = rf2['Fase'].astype(int)
-rf2['Taxa %']    = rf2['Taxa'] * 100
-rf2['FaseLabel'] = rf2['Fase'].apply(lambda f: 'Alfa' if f == 0 else f'F{f}')
-rf2 = rf2.sort_values('Fase')
-
-fig_fun = go.Figure()
-fig_fun.add_trace(go.Bar(
-    x=rf2['FaseLabel'], y=rf2['n'],
-    name='Total de alunos',
-    marker_color='rgba(0,48,135,0.12)',
-    yaxis='y2',
-    hovertemplate='%{x}: %{y} alunos<extra></extra>',
-))
-fig_fun.add_trace(go.Scatter(
-    x=rf2['FaseLabel'], y=rf2['Taxa %'],
-    name='Taxa de risco (%)',
-    mode='lines+markers+text',
-    line=dict(color=RISK_HIGH, width=3),
-    marker=dict(
-        size=11,
-        color=[RISK_HIGH if v >= 40 else ('#F59E0B' if v >= 20 else RISK_LOW) for v in rf2['Taxa %']],
-    ),
-    text=[f"{v:.0f}%" for v in rf2['Taxa %']],
-    textposition='top center',
-    textfont=dict(size=10),
-    hovertemplate='%{x}: %{y:.1f}% em risco<extra></extra>',
-))
-fig_fun.update_layout(
-    **_layout(height=380),
-    xaxis=dict(title='Fase escolar'),
-    yaxis=dict(title='Taxa de risco (%)', range=[0, 110], gridcolor=_GRID),
-    yaxis2=dict(title='Nº de alunos', overlaying='y', side='right',
-                showgrid=False, range=[0, rf2['n'].max() * 4]),
-    legend=dict(orientation='h', yanchor='bottom', y=-0.3),
-    hovermode='x unified',
-)
-st.plotly_chart(fig_fun, use_container_width=True)
-
-fase_max     = rf2.loc[rf2['Taxa %'].idxmax()]
-fase_max_vol = rf2.loc[(rf2['Taxa %'] * rf2['n']).idxmax()]
-_fn = lambda f: 'Alfa' if int(f) == 0 else f"Fase {int(f)}"
-_insight(
-    f"<strong>{_fn(fase_max['Fase'])}</strong> tem a maior taxa de risco ({fase_max['Taxa %']:.0f}%). "
-    f"Mas <strong>{_fn(fase_max_vol['Fase'])}</strong> tem o maior volume absoluto de alunos em risco "
-    f"({int(fase_max_vol['Taxa %'] * fase_max_vol['n'] / 100):.0f} alunos), "
-    "alta taxa numa fase pequena pode ser menos urgente que taxa moderada num grupo grande."
-)
-
-st.markdown("---")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 8. DISTRIBUIÇÃO DO INDE, histograma com limiares
