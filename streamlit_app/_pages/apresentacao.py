@@ -15,9 +15,19 @@ YOUTUBE_WATCH_URL = "https://www.youtube.com/watch?v=lGd5BIrcSZ4"
 st.markdown("""
 <div class="pm-hero">
     <h1>🎬 Vídeo Apresentação</h1>
-    <p>Apresentação do projeto Passos Mágicos, Datathon FIAP 2024</p>
+    <p>Apresentação do projeto Passos Mágicos, Datathon FIAP 2026</p>
 </div>
 """, unsafe_allow_html=True)
+
+st.markdown(
+    "<div style='text-align:center; padding:1.5rem 2rem; color:#64748B; font-size:0.9rem;'>"
+    "💡 Optamos por uma apresentação executiva, com foco no impacto e na experiência do "
+    "usuário final, em vez de um detalhamento técnico dos modelos e da arquitetura. "
+    "Esse aprofundamento técnico está documentado no "
+    "<a href='https://github.com/gnunes-io/passos_magicos_html' target='_blank'>repositório do projeto</a>."
+    "</div>",
+    unsafe_allow_html=True,
+)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -39,13 +49,3 @@ html(
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.caption(f"Assista também direto no [YouTube]({YOUTUBE_WATCH_URL}).")
-
-st.markdown(
-    "<div style='text-align:center; padding:1.5rem 2rem; color:#64748B; font-size:0.9rem;'>"
-    "💡 Optamos por uma apresentação executiva, com foco no impacto e na experiência do "
-    "usuário final, em vez de um detalhamento técnico dos modelos e da arquitetura. "
-    "Esse aprofundamento técnico está documentado nos "
-    "<a href='https://github.com/gnunes-io/datathon' target='_blank'>notebooks e no repositório do projeto</a>."
-    "</div>",
-    unsafe_allow_html=True,
-)
