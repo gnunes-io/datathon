@@ -19,7 +19,12 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.info(
+    "💡 Optamos por uma apresentação executiva, com foco no impacto e na experiência do "
+    "usuário final, em vez de um detalhamento técnico dos modelos e da arquitetura. Esse "
+    "aprofundamento técnico está documentado no "
+    "[repositório do projeto](https://github.com/gnunes-io/passos_magicos_html)."
+)
 
 html(
     f'''
@@ -39,11 +44,3 @@ html(
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.caption(f"Assista também direto no [YouTube]({YOUTUBE_WATCH_URL}).")
-
-st.divider()
-st.caption(
-    "💡 Optamos por uma apresentação executiva, com foco no impacto e na experiência do "
-    "usuário final, em vez de um detalhamento técnico dos modelos e da arquitetura. Esse "
-    "aprofundamento técnico está documentado no "
-    "[repositório do projeto](https://github.com/gnunes-io/passos_magicos_html)."
-)
