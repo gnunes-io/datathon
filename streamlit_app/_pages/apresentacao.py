@@ -28,16 +28,16 @@ st.info(
 
 html(
     f'''
-    <div style="position:relative; padding-top:56.25%; width:100%;">
-        <iframe
-            src="{YOUTUBE_EMBED_URL}"
-            title="Vídeo Apresentação — Passos Mágicos"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen="true"
-            style="position:absolute; top:0; left:0; width:100%; height:100%;"
-        ></iframe>
-    </div>
+    <iframe
+        src="{YOUTUBE_EMBED_URL}"
+        title="Vídeo Apresentação — Passos Mágicos"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen="true"
+        width="100%"
+        height="500"
+        style="display:block;"
+    ></iframe>
     ''',
     height=500,
 )
